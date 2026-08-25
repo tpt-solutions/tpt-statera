@@ -1,0 +1,306 @@
+# tpt-statera: Formally Verified Financial Invariant & Ledger Engine
+
+**Status:** Draft v1 / Phase 1 Initiation
+**Author:** TPT Solutions
+**Date:** August 20, 2026
+**License:** MIT OR Apache-2.0
+
+---
+
+## 1. Executive Summary
+
+`tpt-statera` is a pure-Rust, domain-agnostic, formally verified engine for validating financial state transitions and enforcing economic invariants. Unlike traditional ledger implementations that rely on runtime `assert!` statements or post-hoc auditing, `tpt-statera` treats every balance update, transfer, or fee calculation as a **formal conservation-of-value problem**.
+
+By leveraging the `tpt-telos` agentic compiler and its self-contained Fourier-Motzkin QF_LRA solver, `tpt-statera` mathematically proves that no state transition can create, destroy, or misallocate value. It operates on a two-layer specification: an **ideal real-arithmetic model** (exact rationals) and a **sound fixed-point/floating-point realization** that explicitly accounts for rounding modes (e.g., floor, ceiling) and guarantees that "dust" or rounding remainders are strictly accounted for, never silently vanishing or minting.
+
+The end goal: `tpt-statera` becomes the foundational verification layer for high-stakes financial systems (DeFi, enterprise payments, tokenomics), providing machine-checked certificates that economic invariants hold across all execution paths, suitable for SOC2, MiCA, and institutional audit requirements.
+
+---
+
+## 2. Target Industries & The Gap We Fill
+
+*The guarantees in this section describe the target architecture once `tpt-statera-runtime` and multi-account composition are verified (see Sections 4 and 8). Phase 1 delivers the core stateful transfer validator these guarantees will be built on top of — see Section 6.*
+
+`tpt-statera` is designed for environments where a single arithmetic error, rounding bug, or missed edge case results in catastrophic financial loss, insolvency, or regulatory failure.
+
+| Industry | Use Case | The Gap | The `tpt-statera` Guarantee (target architecture) |
+| :--- | :--- | :--- | :--- |
+| **DeFi & Smart Contracts** | Automated Market Makers (AMMs), lending protocols, and cross-chain bridges. | Complex arithmetic (e.g., constant-product formulas, pro-rata distributions) often suffers from rounding errors that allow attackers to siphon "dust" or manipulate oracle prices. | **Strict Conservation of Value:** Proves that $\sum \text{Outputs} + \text{Fees} + \text{Accounted Dust} == \sum \text{Inputs}$ across all state transitions, with zero tolerance for unaccounted value creation. |
+| **Enterprise Payments & Fintech** | High-volume payment routing, merchant settlement, and multi-currency ledgers. | Floating-point representation of currency or flawed fee-calculation logic can result in systematic leakage (e.g., losing fractions of a cent per transaction, compounding to millions). | **Bounded Rounding Semantics:** Formally verifies that the chosen rounding mode (e.g., `floor`, `half_even`) is applied consistently, and the resulting error is strictly bounded and explicitly allocated (e.g., returned to payer), never silently dropped. |
+| **Tokenomics & Vesting** | Linear token unlocks, staking reward distributions, and treasury management. | Block-timestamp manipulation or integer division truncation can allow users to claim more than their vested proportion, draining the treasury. | **Temporal & Proportional Invariants:** Proves that `claimable_amount <= (elapsed_time / total_time) * total_allocation`, bounded by explicit integer or fixed-point precision limits. |
+| **Supply Chain Finance** | Invoice factoring, dynamic discounting, and multi-party settlement. | Reconciling partial payments, fees, and currency conversions across multiple parties often leads to off-by-one errors or unreconciled ledger states. | **Multi-Party Reconciliation:** Proves that the sum of all party state changes in a single settlement transaction equals exactly zero (conservation of value). |
+
+---
+
+## 3. Architectural Principles
+
+1. **Conservation of Value (Absolute):** The sum of all value in the system must remain constant, or decrease only by explicitly defined, accounted-for mechanisms (e.g., burned fees). Value can never be created out of thin air.
+2. **Explicit Dust Accounting:** Rounding errors are not ignored. The rounding mode is explicitly defined, and the resulting "dust" is mathematically proven to be allocated to a specific destination (e.g., returned to sender, sent to treasury, or burned), never silently vanished.
+3. **Two-Layer Soundness:** Financial logic is defined in ideal QF_LRA (exact rationals) and compiled to the target numeric representation (e.g., `u64`, `i128`, or fixed-point `f64`) with explicit, machine-checked error bounds.
+4. **Domain Agnostic:** `tpt-statera` does not know what a "token," "fiat currency," or "NFT" is. It only understands numeric balances, deltas, and linear conservation equations.
+5. **Leverage the Ecosystem:** Consumes `tpt-math` for bounded arithmetic and `tpt-formal` for audit-trail generation.
+
+---
+
+## 4. System Architecture (Crate Map)
+
+| Crate | Purpose | Existing TPT Dependencies | The `tpt-telos` Upgrade | Phase 1 Status |
+| :--- | :--- | :--- | :--- | :--- |
+| `tpt-statera-core` | **Core Engine.** Stateful transfer validation, fee calculation, and strict conservation logic. | `tpt-math` | Proves conservation of value and zero-unaccounted-dust invariants. | **In scope** — see Section 6. |
+| `tpt-statera-policy` | Fee structures, rate limits, and proportional distribution rules. | *(New)* | Proves that policy definitions are internally consistent and cannot result in negative balances or overflow. | Out of scope; single-fee model only in Phase 1. |
+| `tpt-statera-runtime` | The Rust/Go FFI bridge that intercepts state transitions at runtime (e.g., CosmWasm, Cosmos SDK). | *(New)* | Proves the FFI boundary cannot be bypassed, and that host-environment state matches the verified snapshot. | Out of scope. |
+| `tpt-statera-proof` | Proof-certificate assembly, mapping verification records to financial audit controls (SOC2, MiCA). | `tpt-formal` | Generates the compliance artifacts auditors actually consume. | First-draft certificate only (Section 7). |
+
+---
+
+## 5. The Verification Strategy
+
+### 5.1 The "Conservation of Value" Imperative
+
+In financial systems, a false positive (rejecting a valid transfer) is a degraded user experience. A false negative (allowing a transfer that creates or destroys value) is catastrophic.
+`tpt-statera`'s realization layer is explicitly optimized for **strict conservation**. Every state transition function must satisfy the invariant:
+`Sum(Pre-State Balances) == Sum(Post-State Balances) + Sum(Accounted Fees/Dust)`.
+`tpt-telos` proves this holds for all possible input combinations, including edge cases like zero-value transfers, maximum integer bounds, and extreme fee rates.
+
+### 5.2 Explicit Rounding and Dust Accounting
+
+When ideal rational math (e.g., `amount * 0.0015`) must be realized in discrete units (e.g., integer tokens), rounding is required. `tpt-statera` does not hide this. It requires the developer to specify the rounding mode (e.g., `Floor`, `Ceiling`, `HalfEven`). The QF_LRA solver then proves two things:
+
+1. The realized rounded value is within the mathematically defined bound of the ideal value (e.g., `abs(realized - ideal) < 1.0` unit).
+2. The difference (`dust`) is explicitly added to a designated account (e.g., `sender_refund` or `treasury`), ensuring the global conservation invariant remains perfectly balanced.
+
+---
+
+## 6. Phase 1 Proof of Concept: Verified Stateful Transfer Validation
+
+**Phase 1 Goal:** Implement and formally verify `validate_transfer` in `tpt-statera-core`, proving that a single transfer request, including a proportionally calculated fee, strictly conserves value, prevents overdrafts, and explicitly accounts for all rounding dust, with absolute tolerance for numeric edge cases.
+
+### 6.1 Revision History for This Contract
+
+| Change | Why It Was Necessary |
+| :--- | :--- |
+| **Explicit Dust Accounting (`dust_retained_by_sender`, originally `dust_refunded_to_sender`)** | Adversarial review of early financial specs often reveals "vanishing dust" bugs, where integer division truncation silently destroys fractions of a unit, violating global conservation of value over millions of transactions. By explicitly calculating the modulo (`dust`) and proving it remains with the sender (via exclusion from `total_deduction`), the strict conservation invariant (`post_sum == pre_sum`) holds perfectly. Renamed from `dust_refunded_to_sender` because nothing is actually refunded — the dust is never debited in the first place, so the original name implied a debit-then-credit cycle that doesn't occur. Matters for anyone reading the audit trail. |
+| **Conservative Rounding Mode (Floor)** | Chose `Floor` division for the fee calculation. This guarantees the protocol never extracts *more* value than the ideal rational math dictates, protecting the user from rounding-based overcharging. The trade-off (protocol loses microscopic dust) is a deliberate, proven safety feature, not a bug. |
+| **Independent `let ideal = ...` binding** | Contract clauses are independent predicates; a binding made in one does not carry into the next, so each clause re-derives `ideal` rather than assuming shared scope. |
+| **Single-call / non-atomicity scope note** | Adversarial review flagged that "formally verified conservation" could be misread as a claim about production safety under concurrent access (e.g., double-spends). Added an explicit note that this function validates one proposal against one state snapshot, and that atomicity is a caller obligation — see Section 8. |
+| **Runtime guard on `fee_rate_bps <= 10000`** | The ideal-layer contract documented this as a precondition but nothing enforced it at runtime. Per Section 8 Assumption 3, `fee_rate_bps` is trusted config, not end-user input — so this is belt-and-suspenders, not the primary defense. Without it, a misconfigured rate >10000bps would silently charge >100% fee and still return `Allow` (conservation would still hold, since it's an economic bug rather than a safety violation — but exactly the kind of thing a config typo turns into a real incident). Now fails closed. |
+| **Checked additive overflow on recipient/treasury balances** | The original draft checked `total_deduction` against `sender_balance` before subtracting, but left `recipient_balance + amount` and `treasury_balance + rounded_fee` as unchecked `u64` additions. An overflow there would panic in debug builds or silently wrap in release — and a silent wrap is exactly the "value created/destroyed" failure this crate exists to rule out. Both sums are now computed in `u128` and checked against `u64::MAX` before any `u64` addition occurs, denying instead of wrapping. |
+| **Removed `requires` clauses for additive overflow; corrected to `ensures`** | An earlier revision briefly stated the overflow guards as `requires` (caller preconditions), which contradicted the code: the function doesn't leave overflow as undefined behavior for the caller to avoid, it defensively checks and denies. A condition the function itself handles by returning `Deny` cannot simultaneously be a precondition — the two framings make incompatible claims about who is responsible for the case. Corrected to a single `ensures` clause: `overflow-condition ==> Deny`. This also fixed a second, sharper defect: the clause had referenced `rounded_fee` as a bare, unbound identifier, which is invalid in an `ensures` clause under this contract's own "independent clause scope" rule (each clause re-derives its own bindings from inputs; nothing carries over from the function body or other clauses). The fix expresses the fee purely in terms of inputs — `max_possible_fee = floor(amount * fee_rate_bps / 10000)`, recomputed inline — so the solver can evaluate the postcondition without binding to an internal local variable. |
+| **Clarified why `fee_rate_bps <= 10000` and `sender_balance >= amount` remain `requires`, not `ensures`** | The same requires/ensures argument technically applies to these two as well — the function doesn't panic on either violation, it denies gracefully. They are kept as `requires` anyway, but for a reason that is about documented intent rather than formal necessity: Section 8 Assumption 3 already draws this exact line, treating `fee_rate_bps` as a trusted-config input where the runtime check is explicit belt-and-suspenders, not the primary defense. The overflow case was different — an unconsidered gap, not a deliberate trust boundary. A comment now marks this distinction directly on the two surviving `requires` clauses so a future reviewer doesn't "fix" them the same way the overflow clauses were fixed and inadvertently erase the documented trust-boundary intent. |
+
+---
+
+## 7. Compliance & Regulatory Roadmap (SOC2 / MiCA / Financial Audit)
+
+Formal proofs are strong evidence for compliance but require mapping to specific regulatory controls. `tpt-statera` treats compliance as an explicit engineering track:
+
+| Phase | Deliverable | Regulatory Objective Addressed |
+| :--- | :--- | :--- |
+| 1 | Proof Certificate format finalized; `tpt-statera-proof` crate ships a **first draft** certificate for `validate_transfer` only. | Establishes traceable, machine-readable verification records for financial state transitions. *Not yet a compliance claim — see caveat below.* |
+| 2 | Mapping of `tpt-statera` Proof Certificates to SOC2 CC6.1 (Logical Access Security), MiCA Article 51 (Asset safeguarding), or relevant financial audit standards. | Converts abstract math proofs into auditor-ready compliance evidence. |
+| 3 | Independent audit of the "Conservation of Value" and "Explicit Dust" rounding arguments by a third-party financial security firm (e.g., Trail of Bits, Halborn). | Confirms the zero-value-creation claim holds up under external scrutiny. |
+| 4 | Reference submission package built against the Phase 1 transfer validator, as a template for enterprise/DeFi customers' own audit submissions. | Converts the abstract claim "auditable" into a concrete, reusable artifact. |
+
+**Caveat:** Phase 1's "first-draft Proof Certificate" is an illustrative artifact demonstrating the certificate format and workflow. It is not, by itself, a compliance claim, does not cover concurrent-access or multi-party netting scenarios (Section 8), and should not be represented to customers or auditors as a completed regulatory mapping until Phase 2 is delivered and Phase 3's independent audit has occurred.
+
+---
+
+## 8. Threat Model & Assumptions
+
+The guarantees in this document hold only under the following assumptions. These are the conditions a deploying team must satisfy for the "conservation of value" claim to apply to their system, and they define the boundary between what Phase 1 proves and what the target architecture (Section 2) aims to prove.
+
+1. **Finite, non-overflowing inputs.** `validate_transfer` assumes `TransferProposal` and `SystemState` fields are within valid `u64` bounds. Enforcing schema validity is an upstream obligation. *(Updated scope: this covers each field individually. The distinct condition — that a valid combination of fields, e.g. `recipient_balance + amount`, could itself overflow `u64` — is not an assumption at all: the function is total over it. It is checked at runtime and denied rather than silently wrapped, and this is now expressed as an `ensures` postcondition, not a `requires` precondition, since the caller carries no obligation to avoid it. See Section 6.1.)*
+2. **Serialized validation per account.** `validate_transfer` proves correctness for a *single call* against a *single snapshot* of `SystemState`. It does not prove atomicity. If two proposals against the same sender balance are validated concurrently (e.g., two parallel transactions both reading `sender_balance = X` before either write lands), both may independently receive `ValidationOutcome::Allow` in a way that, applied together, results in an overdraft — even though each individual call was correctly verified. **Deploying teams must serialize validation-and-commit per account** (e.g., via a mutex, actor, or blockchain nonce) for the proven guarantee to hold in production. This is a caller obligation until `tpt-statera-runtime` is built and verified to close this gap at the FFI boundary.
+3. **Trusted policy inputs.** `TransferProposal.fee_rate_bps` and `SystemState` are assumed to be supplied by a trusted configuration/state layer, not by the end-user or an untrusted oracle. This is the one place the contract still carries a `requires` precondition (`fee_rate_bps <= 10000`) rather than an `ensures`-style denial, and that is deliberate: unlike the overflow case, this is a documented trust boundary the caller is expected to uphold, not a gap the function discovered and closed unilaterally. A defensive runtime check has been added in `validate_transfer` as belt-and-suspenders against misconfiguration, but it does not change the precondition's status — the primary defense remains upstream trust in the config/state layer, and the same logic applies to the `sender_balance >= amount` solvency precondition.
+4. **No enforcement-bypass guarantee yet.** Nothing in Phase 1 prevents a compromised or misconfigured host application from simply not calling `validate_transfer`, or from ignoring its `Deny` result. That guarantee is the explicit purpose of `tpt-statera-runtime`, which is out of scope for Phase 1.
+
+---
+
+## 9. Phase 1 Exit Criteria
+
+Phase 1 is complete when all of the following hold:
+
+1. `validate_transfer` passes both ideal-layer and realization-layer proofs as specified in Section 6, specifically including the "Strict Conservation of Value" and "No False Allows (Overdraft)" postconditions.
+2. The FM-elimination scalability benchmark is run against the **multi-party settlement function** (targeted for Exit Criterion 4) using a synthetic 10-party netting scenario, proving tractability for complex, multi-constraint financial logic. **Tractability target:** median validation latency under **10ms** and worst-case (p99) latency under **50ms** per call on reference hardware (spec TBD), making this criterion objectively falsifiable.
+3. A first-draft Proof Certificate is generated and mapped to the SOC2 / MiCA objectives, explicitly labeled as illustrative per the Section 7 caveat.
+4. The two-layer soundness mechanism in `tpt-telos` is demonstrated on at least two functions beyond `validate_transfer` (e.g., a linear vesting schedule calculator and a multi-party settlement netting function), and the multi-party function's proof explicitly addresses the constraint-orthogonality assumption.
+5. *(New)* A written threat-model document (Section 8 of this draft, or its successor) is reviewed and signed off, so that "conservation of value" is never cited externally without its accompanying scope (e.g., serialized execution).
+
+---
+
+## Appendix A: `tpt-statera-core/src/transfer_validator.rs` (Phase 1 reference implementation, updated)
+
+```rust
+// tpt-statera-core/src/transfer_validator.rs
+
+/// Represents the proposed financial action.
+pub struct TransferProposal {
+    pub amount: u64,        // The exact amount the recipient should receive
+    pub fee_rate_bps: u64,  // Fee in basis points (e.g., 15 = 0.15%)
+}
+
+/// Represents the current state of the involved parties.
+pub struct SystemState {
+    pub sender_balance: u64,
+    pub recipient_balance: u64,
+    pub treasury_balance: u64,
+}
+
+/// The result of the validation, including explicit dust accounting.
+pub enum ValidationOutcome {
+    Allow {
+        new_sender_balance: u64,
+        new_recipient_balance: u64,
+        new_treasury_balance: u64,
+        rounded_fee: u64,
+        // Renamed from `dust_refunded_to_sender`: nothing is actually refunded —
+        // the dust is never debited in the first place, since it's excluded from
+        // `total_deduction`. This name avoids implying a debit-then-credit that
+        // doesn't occur, which matters for anyone reading the audit trail.
+        dust_retained_by_sender: u64,
+    },
+    Deny,
+}
+
+/// # Scope note
+/// Per-field bounds (each `u64` field individually valid) remain a `requires`
+/// precondition. Whether a valid *combination* of fields — e.g.
+/// `recipient_balance + amount` — overflows `u64` is a distinct condition, and
+/// it is NOT a precondition: the function is total over it. It's checked at
+/// runtime and denied rather than silently wrapped, so it's expressed below as
+/// an `ensures` postcondition instead.
+/// This function validates a single proposal against a single snapshot of
+/// `SystemState`. It does not itself guarantee atomicity across concurrent
+/// calls — see Section 8 (Threat Model & Assumptions) for the serialization
+/// requirement this places on callers.
+
+/// Formally verified stateful transfer validator with strict conservation of value.
+///
+/// # tpt-telos Contracts — Ideal Layer (QF_LRA, exact rationals)
+/// requires: // Documented trust boundary (Section 8, Assumption 3) — NOT the same
+///           // kind of clause as the overflow ensures below. This is a genuine
+///           // caller obligation: fee_rate_bps is trusted config, not end-user
+///           // input, and the runtime check in the body is belt-and-suspenders,
+///           // not evidence this should be an ensures-style denial.
+///   proposal.fee_rate_bps <= 10000 // Max 100% fee
+/// requires: // Same trust-boundary status as above — a caller obligation, not a
+///           // condition the function was designed to gracefully deny.
+///   state.sender_balance >= proposal.amount // Basic solvency check
+/// ensures: // No overdraft on any party
+///   if let ValidationOutcome::Allow { .. } = result {
+///     new_sender_balance <= state.sender_balance &&
+///     new_recipient_balance >= state.recipient_balance &&
+///     new_treasury_balance >= state.treasury_balance
+///   }
+/// ensures: // STRICT CONSERVATION OF VALUE
+///   if let ValidationOutcome::Allow {
+///     new_sender_balance, new_recipient_balance, new_treasury_balance,
+///     rounded_fee, dust_retained_by_sender
+///   } = result {
+///     let pre_sum = state.sender_balance + state.recipient_balance + state.treasury_balance;
+///     let post_sum = new_sender_balance + new_recipient_balance + new_treasury_balance;
+///     // The only acceptable change is the explicit accounting of the fee and dust
+///     post_sum == pre_sum
+///     // (Note: The algebraic proof expands this to show that the deduction from sender
+///     // exactly equals the sum of recipient addition, treasury addition, and dust retained).
+///   }
+///
+/// # tpt-telos Contracts — Realization Layer (u64 integer arithmetic, bounded rounding)
+/// ensures: // Bounded rounding error on fee calculation
+///   let ideal_fee_rational = (proposal.amount as f64) * (proposal.fee_rate_bps as f64) / 10000.0;
+///   let ideal = symbolic_evaluate_ideal(state, proposal, ideal_fee_rational); // re-bound: independent clause scope
+///   (matches!(ideal, ValidationOutcome::Allow { rounded_fee: ideal_fee, .. }) &&
+///    matches!(result, ValidationOutcome::Allow { rounded_fee, .. })) ==>
+///     abs((rounded_fee as f64) - ideal_fee) <= 1.0 // Rounded fee is at most 1 unit away from ideal
+/// ensures: // CONSERVATIVE DENIAL: NO FALSE ALLOWS (Overdraft prevention)
+///   let ideal = symbolic_evaluate_ideal(state, proposal, ideal_fee_rational); // re-bound: independent clause scope
+///   matches!(ideal, ValidationOutcome::Deny) ==> matches!(result, ValidationOutcome::Deny)
+/// ensures: // CONSERVATIVE DENIAL on additive overflow (no silent wraparound)
+///   // Corrected from an earlier `requires`-based framing: the function does not
+///   // leave overflow as caller-avoided undefined behavior, it defensively checks
+///   // and denies — so it belongs here as a postcondition, not above as a
+///   // precondition. Expressed purely in terms of inputs (max_possible_fee is
+///   // recomputed inline rather than referencing the local `rounded_fee`), so the
+///   // solver can evaluate it without binding to an internal variable — bare
+///   // references to body-local bindings are invalid under this contract's own
+///   // independent-clause-scope rule.
+///   let max_possible_fee = ((proposal.amount as u128) * (proposal.fee_rate_bps as u128)) / 10000;
+///   ((state.recipient_balance as u128) + (proposal.amount as u128) > u64::MAX as u128 ||
+///    (state.treasury_balance as u128) + max_possible_fee > u64::MAX as u128)
+///     ==> matches!(result, ValidationOutcome::Deny)
+pub fn validate_transfer(
+    state: SystemState,
+    proposal: TransferProposal,
+) -> ValidationOutcome {
+    // 0. Defensive guard on the trusted-input precondition (Section 8, Assumption 3).
+    // `fee_rate_bps` is documented as trusted config, not end-user input, so this
+    // is belt-and-suspenders rather than the primary defense. Without it, a
+    // misconfigured `fee_rate_bps > 10000` would silently charge >100% fee and
+    // still return `Allow` (conservation would still hold — it's an economic
+    // bug, not a safety violation — but it's exactly the kind of thing a config
+    // typo turns into a real incident). Fail closed instead.
+    if proposal.fee_rate_bps > 10_000 {
+        return ValidationOutcome::Deny;
+    }
+
+    // 1. Basic solvency: Cannot send more than you have
+    if state.sender_balance < proposal.amount {
+        return ValidationOutcome::Deny;
+    }
+
+    // 2. Calculate ideal fee and apply conservative rounding (Floor).
+    //
+    // Using Floor ensures the protocol never takes *more* than the mathematically
+    // proportional amount, protecting the user from overcharging due to rounding.
+    // The "dust" (remainder) is never debited from the sender in the first place —
+    // it's simply excluded from `total_deduction`.
+    //
+    // Note: In a pure tpt-telos environment, this multiplication/division is
+    // analyzed as exact rational math, then bounded to u64 semantics.
+    let numerator = (proposal.amount as u128) * (proposal.fee_rate_bps as u128);
+    let rounded_fee = (numerator / 10_000) as u64; // Floor division
+    let dust = (numerator % 10_000) as u64;        // Explicitly captured remainder
+
+    // 3. Calculate total deduction.
+    // Because we use Floor for the fee, the sender pays `amount + rounded_fee`.
+    // `dust` remains with the sender, ensuring strict conservation.
+    let total_deduction = (proposal.amount as u128) + (rounded_fee as u128);
+
+    // 4. Prevent underflow on the sender side.
+    if total_deduction > (state.sender_balance as u128) {
+        return ValidationOutcome::Deny;
+    }
+
+    // 5. Prevent overflow on the recipient and treasury sides.
+    //
+    // This is the fix for the gap in the original draft: `total_deduction` was
+    // checked against `sender_balance`, but the two *additions* below were not
+    // checked at all. An unchecked `recipient_balance + amount` or
+    // `treasury_balance + rounded_fee` exceeding u64::MAX would either panic
+    // (debug) or silently wrap (release) — and a silent wrap is exactly the
+    // "value created/destroyed" failure mode this crate exists to rule out.
+    // We compute in u128 first and deny before ever touching u64 addition.
+    let new_recipient_balance_wide = (state.recipient_balance as u128) + (proposal.amount as u128);
+    let new_treasury_balance_wide = (state.treasury_balance as u128) + (rounded_fee as u128);
+
+    if new_recipient_balance_wide > u64::MAX as u128 || new_treasury_balance_wide > u64::MAX as u128 {
+        return ValidationOutcome::Deny;
+    }
+
+    // 6. Apply state transitions. Safe to cast now — both wide sums are proven
+    // to fit in u64 by the checks in step 5.
+    let new_sender_balance = state.sender_balance - (total_deduction as u64);
+    let new_recipient_balance = new_recipient_balance_wide as u64;
+    let new_treasury_balance = new_treasury_balance_wide as u64;
+
+    // Note: `dust` is implicitly retained in `new_sender_balance` because it was
+    // excluded from `total_deduction`. This is the explicit dust accounting.
+    ValidationOutcome::Allow {
+        new_sender_balance,
+        new_recipient_balance,
+        new_treasury_balance,
+        rounded_fee,
+        dust_retained_by_sender: dust, // Exposed for audit transparency
+    }
+}
+```
