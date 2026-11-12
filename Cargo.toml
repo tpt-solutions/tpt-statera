@@ -9,6 +9,7 @@ members = [
     # Placeholder stubs — out of scope for Phase 1 (todo 1A.02).
     "crates/tpt-statera-policy",
     "crates/tpt-statera-runtime",
+    "crates/tpt-statera-cosmwasm",
 ]
 
 [workspace.package]

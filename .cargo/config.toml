@@ -1,0 +1,8 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Copyright (c) 2026 TPT Solutions
+
+# CosmWasm host functions (env.addr_validate, env.db_read, ...) are imports supplied by the chain.
+# rust-lld rejects them as undefined unless told to leave them as wasm imports. Scoped to wasm32 only,
+# so host builds are unaffected.
+[target.wasm32-unknown-unknown]
+rustflags = ["-C", "link-arg=--allow-undefined"]
