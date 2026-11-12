@@ -1,0 +1,60 @@
+// NEGATIVE CONTROL (todo 1C.04, nightly): this file must FAIL. The claimant receives one extra scaled unit.
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) 2026 TPT Solutions
+//
+// tpt-statera — IDEAL layer of the linear-vesting claim (todo 1C.04, 1D.04 vesting half).
+//
+// The ideal claim is the exact rational elapsed*alloc/total. The realization layer
+// (vesting_exact.telos) floors it to a whole unit. This file keeps it exact.
+//
+// ENCODING (scaled integers, so no division by a variable is needed). Balances are held in
+// units of 1/total raw units:
+//   * alloc_s = total * alloc         (the scaled allocation)
+//   * claim_s = elapsed * alloc       (the exact ideal claim, scaled: elapsed*alloc/total * total)
+// Both are requires, so the proof does not depend on the solver discharging the scaling.
+//
+// PROVED (under --solver z3):
+//   V1 exact conservation: claimed_s + pool_s == alloc_s, with no rounding slack
+//   V2 the ideal claim never exceeds the allocation (elapsed <= total)
+//   V3 no negative balances on either side
+//   V4 the claim is exactly the proportional share: claimed_s == elapsed * alloc
+//
+// RELATION TO THE REALIZATION LAYER (checked in vesting_exact.telos, not re-proved here):
+//   the realized claim v satisfies v*total <= elapsed*alloc < v*total + total, so the gap between
+//   the ideal and the realized claim is in [0, 1) raw units (1D.04 gap bound for vesting).
+//
+// Verified: `telos verify --solver z3 proofs/ideal_vesting.telos`
+
+@boundary(cpu_bound)
+@state(persistent)
+module IdealVesting {
+    invariant Account {
+        balance >= 0
+    }
+
+    func claim_ideal(mut claimed: Account, mut pool: Account,
+                     alloc: Int, alloc_s: Int, total: Int, elapsed: Int, claim_s: Int)
+        requires alloc >= 0
+        requires total >= 1
+        requires elapsed >= 0
+        requires elapsed <= total
+        requires alloc_s == total * alloc
+        requires claim_s == elapsed * alloc
+        requires claimed.balance == 0
+        requires pool.balance == alloc_s
+        // V1 exact conservation
+        ensures claimed.balance + pool.balance == alloc_s
+        // V2 the claim never exceeds the allocation
+        ensures claimed.balance <= alloc_s
+        // V3 no negative balances
+        ensures claimed.balance >= 0
+        ensures pool.balance >= 0
+        // V4 the claim is exactly the proportional share
+        ensures claimed.balance == elapsed * alloc
+    {
+        mutate state {
+            claimed.balance = claim_s + 1;
+            pool.balance = alloc_s - claim_s;
+        }
+    }
+}

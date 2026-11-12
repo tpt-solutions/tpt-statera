@@ -43,10 +43,15 @@ The solver reports an obligation once per control-flow path, and names the path 
 
 ## Known gaps
 
-- **tpt-formal audit trail not consumed.** The spec (todo 1F.01) asks the certificate to consume
-  `tpt-formal` output. It does not yet. The certificate reads only `telos verify --json`.
+- **Source decision (todo 1F.01): the certificate consumes `telos verify --json`, not `tpt-formal`.**
+  The spec asked for `tpt-formal` audit-trail output. `tpt-formal` has no such output (searched its
+  source, 2026-11-13), so the certificate cannot consume it. The certificate's evidence is the telos
+  solver output, which is what the claims are actually checked by. If `tpt-formal` later gains an
+  audit-trail format, it becomes a new schema version (`0.2-draft`), not an edit to this one.
 - **Control mappings are stubs.** SOC2 CC6.1 and MiCA Article 51 are marked `mapping pending Phase 2`.
-- **Disjunctive clauses are excluded.** A claim is not made for a clause the solver cannot check
-  reliably (`docs/ARCHITECTURE.md` AD-6).
+- **Scope of the 16 claims.** The claims cover `transfer_validator_full.telos` under Z3, including its six
+  disjunction groups. The ideal layer (`proofs/ideal_transfer_validator.telos`) is not in the certificate yet,
+  so the certificate does not state the ideal-to-realized link. Adding it changes the claim set; whether that
+  needs a schema bump is a call for the reviewer (todo 1G.03).
 - **Threat-model version not referenced.** The certificate does not yet carry the `THREAT_MODEL.md`
   version. Adding it is a schema change.

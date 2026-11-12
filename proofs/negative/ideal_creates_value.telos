@@ -1,0 +1,74 @@
+// NEGATIVE CONTROL (todo 1C.01, nightly): this file must FAIL. The treasury is credited one extra unit.
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) 2026 TPT Solutions
+//
+// tpt-statera — IDEAL layer of validate_transfer (todo 1C.01, 1C.03, 1C.04's transfer half).
+//
+// The ideal layer is the exact-rational specification with no rounding. The realization layer
+// (transfer_validator_full.telos) floors the fee to whole units. This file keeps the fee exact.
+//
+// ENCODING (scaled integers, so the rational fee needs no division):
+//   * Every balance is held in units of 1/10000 of a raw unit: `balance_s = 10000 * balance`.
+//   * The exact fee is amount*bps/10000 raw units, which is `amount*bps` in these scaled units.
+//     So the ideal fee is an integer and the ledger stays exact.
+//   * `big` is 10000*amount (the scaled amount). It is a requires, so the proof does not depend
+//     on the solver discharging the scaling.
+//   * `status.balance` is 1 on Allow and 0 on Deny, so ensures can observe the outcome.
+//
+// IDEAL DECISION: Allow iff sender_s >= big + ideal_s, where ideal_s = amount*bps.
+//
+// PROVED (under --solver z3):
+//   I1 exact conservation: no value is created or destroyed, with no rounding slack
+//   I2 no overdraft on the ideal layer
+//   I3 directionality
+//   I4 Deny is a no-op
+//
+// RELATION TO THE REALIZATION LAYER (checked in transfer_validator_full.telos, not re-proved here):
+//   the realized fee f satisfies 10000*f <= ideal_s < 10000*f + 10000, so the gap between the
+//   ideal fee and the realized fee is in [0, 1) raw units (1D.01). The ideal Deny condition implies
+//   the realized Deny, or a shortfall under one unit (1D.02, AD-5). Those are the two layers' link.
+//
+// Verified: `telos verify --solver z3 proofs/ideal_transfer_validator.telos`
+
+@boundary(cpu_bound)
+@state(persistent)
+module IdealTransferValidator {
+    invariant Account {
+        balance >= 0
+    }
+
+    func validate_ideal(mut sender: Account, mut recipient: Account, mut treasury: Account,
+                        mut status: Account, amount: Int, bps: Int, ideal_s: Int, big: Int)
+        requires amount >= 0
+        requires bps >= 0
+        requires bps <= 10000
+        requires big == 10000 * amount
+        requires ideal_s == amount * bps
+        requires sender.balance >= 0
+        requires recipient.balance >= 0
+        requires treasury.balance >= 0
+        requires status.balance == 0
+        // I1 exact conservation
+        ensures sender.balance + recipient.balance + treasury.balance
+                == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+        // I2 no overdraft on the ideal layer
+        ensures sender.balance >= 0
+        // I3 directionality
+        ensures sender.balance <= old(sender.balance)
+        ensures recipient.balance >= old(recipient.balance)
+        ensures treasury.balance >= old(treasury.balance)
+        // I4 Deny is a no-op
+        ensures status.balance != 0 || sender.balance == old(sender.balance)
+        ensures status.balance != 0 || recipient.balance == old(recipient.balance)
+        ensures status.balance != 0 || treasury.balance == old(treasury.balance)
+    {
+        if sender.balance >= big + ideal_s {
+            mutate state {
+                sender.balance = old(sender.balance) - big - ideal_s;
+                recipient.balance = old(recipient.balance) + big;
+                treasury.balance = old(treasury.balance) + ideal_s + 1;
+                status.balance = 1;
+            }
+        }
+    }
+}
