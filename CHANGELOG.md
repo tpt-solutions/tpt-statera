@@ -4,6 +4,30 @@ All notable changes. Claims in this file stay inside the spec §7 caveat and `TH
 
 ## Unreleased (0.1.0 candidate)
 
+### Adoption tooling (todo 5A–5E)
+
+- **Deny reasons.** `tpt-statera-core::validate_transfer_explained` returns `Err(DenyReason)` with the first
+  failing check. The proven `validate_transfer` is unchanged, and a test checks that the two always agree.
+- **Breaking, within this unreleased version:** `Submission::Denied`, `Reply::Denied` and
+  `ContractError::Denied` now carry a `DenyReason`. The TCP reply is `D <code>`. A bare `D` still parses, as
+  `Unclassified`.
+- `Display` for `DenyReason`, `ValidationOutcome`, `PolicyError`, `LedgerError` and `ServiceError`;
+  `std::error::Error` for the policy and runtime errors.
+- Optional `serde` features on `tpt-statera-core` and `tpt-statera-policy`, off by default. Deserialization of
+  policy types runs the same checks as their constructors, and unknown fields are refused.
+- `tpt-statera-core::prelude`, plus `TransferProposal::new` and `SystemState::new`. Arguments are positional.
+- `tpt-statera-policy::validate_with_policy`: selects the tier rate, runs the unchanged validator, and divides
+  the fee. Not yet wired into `Ledger`: the ledger has one treasury account and cannot route a split.
+- `tpt-statera-proof` is now a solver-free verifier for `proofs/certificate.json`, with the schema in
+  `docs/certificate.schema.json`. It checks consistency with the inputs, not the proofs.
+- `tpt-statera-cli`: the `statera` command with `validate`, `simulate-fees`, `policy lint` and `cert verify`.
+  Its exit codes are 0 success, 1 denial or failed check, 2 usage or parse error.
+- `tpt-statera-testkit`: seeded PRNG, exact oracle and invariant checkers for integrators. Optional proptest strategies.
+- `fuzz/`: cargo-fuzz targets for `validate_transfer` and `Ledger::submit`. Run on Linux only; not yet run.
+- `Dockerfile` and `.devcontainer/` for the pinned proof environment. Not yet built.
+- Composite action `.github/actions/verify-certificate`. Not yet run on GitHub.
+- `cargo deny` policy (`deny.toml`) and an `audit` CI job. Two advisories are accepted with recorded reasons.
+
 ### Added
 
 - `tpt-statera-core`: `validate_transfer` (Floor fee, explicit dust, deny-on-overflow and

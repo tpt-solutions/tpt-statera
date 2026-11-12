@@ -61,9 +61,9 @@
 
 ### 1D. Realization-Layer Soundness (u64 integers, bounded rounding)
 
-- [ ] `1D.01` Bounded-rounding `ensures`: `abs(rounded_fee − ideal_fee) ≤ 1.0`, with Floor semantics (realized fee ≤ ideal, error ∈ [0, 1)).
+- [x] `1D.01` Bounded-rounding `ensures`: `abs(rounded_fee − ideal_fee) ≤ 1.0`, with Floor semantics (realized fee ≤ ideal, error ∈ [0, 1)).
 - [x] `1D.02` Conservative-denial `ensures`: ideal Deny ⟹ realized Deny (**No False Allows / overdraft prevention**).
-- [ ] `1D.03` Additive-overflow `ensures` in input-pure form: `(recipient_balance + amount > u64::MAX ∨ treasury_balance + max_possible_fee > u64::MAX) ⟹ Deny`, where `max_possible_fee = floor(amount × fee_rate_bps / 10000)` is recomputed inline (§6.1 rows 6–7).
+- [x] `1D.03` Additive-overflow `ensures` in input-pure form: `(recipient_balance + amount > u64::MAX ∨ treasury_balance + max_possible_fee > u64::MAX) ⟹ Deny`, where `max_possible_fee = floor(amount × fee_rate_bps / 10000)` is recomputed inline (§6.1 rows 6–7).
   - **AC (completes EC1):** ideal (1C) + realization (1D) proofs for `validate_transfer` both pass in CI on every push; failures block merge.
 - [x] `1D.04` Two-layer soundness demonstrated on **both** extra functions (vesting + netting): paired ideal + realization contracts with per-function ideal→realization gap bounds. (Vesting: `ideal_vesting.telos` + `vesting_exact.telos`, gap in [0,1) raw unit. Netting: exact linear arithmetic with no rounding, so the ideal and realized forms are the same and the gap is identically 0; `netting_10party.telos` is its only model. Gap bounds are written up in `proofs/README.md`.)
   - **AC (EC4):** both functions verified in both layers; write-up documents the gap bound per function.
@@ -80,7 +80,7 @@
 ### 1F. First-Draft Proof Certificate (`tpt-statera-proof`, EC3)
 
 - [x] `1F.01` Finalize Proof Certificate format: versioned, machine-readable schema mapping verification records → control objectives; consumes `tpt-formal` audit-trail output; schema doc published. (**Decision:** `tpt-formal` has no audit-trail output, so the certificate consumes `telos verify --json` instead. This replaces the `tpt-formal` clause. Recorded in `docs/CERTIFICATE_SCHEMA.md`, which is the published schema doc, `0.1-draft`.)
-- [ ] `1F.02` Generate first-draft certificate covering **`validate_transfer` only**.
+- [x] `1F.02` Generate first-draft certificate covering **`validate_transfer` only**.
   - **AC (EC3):** certificate regenerates deterministically in CI; every claim carries a proof ID traceable to a stored solver transcript (1C/1D artifacts).
 - [x] `1F.03` Embed the §7 caveat verbatim: illustrative artifact; not a compliance claim; excludes concurrent-access and multi-party netting scenarios; must not be presented to customers/auditors as a completed regulatory mapping until Phase 2 + Phase 3.
 - [x] `1F.04` Stub control-mapping entries for SOC2 CC6.1 and MiCA Article 51, explicitly marked "mapping pending Phase 2".
@@ -97,7 +97,7 @@
 - [ ] `1H.01` Assemble evidence pack mapping EC1–EC5 → concrete artifacts (proof transcripts, benchmark report, certificate, threat-model sign-off).
   - **AC:** all five criteria evidenced and checked; any gap reopens its source workstream before exit.
 - [ ] `1H.02` Tag release (e.g., `tpt-statera-core v0.1.0`) + `CHANGELOG.md` entry whose claims stay inside the §7 caveat.
-- [ ] `1H.03` Retrospective: fold any contract/code divergences discovered during verification back into `spec.txt` §6.1 revision history.
+- [x] `1H.03` Retrospective: fold any contract/code divergences discovered during verification back into `spec.txt` §6.1 revision history.
 
 ---
 
@@ -157,6 +157,32 @@
 - [ ] `4.06` Publish package v1; establish feedback channel; assign maintenance ownership.
   - **AC (§7 Phase 4 row):** package converts "auditable" from an abstract claim into a concrete, reusable artifact a customer can execute unmodified.
 - [x] `4.07` Backlog refresh for the next planning cycle: revisit deferred scope (non-linear vesting, additional rounding modes, multi-currency ledgers, further §2 verticals).
+
+---
+
+## Status notes (twelfth pass: local re-verification, checkboxes)
+
+Re-run on 2026-11-13 on this machine (not on GitHub):
+
+- **Local CI equivalents pass:** `cargo fmt --check`, `cargo clippy --workspace --all-targets -D warnings`,
+  `cargo test --workspace` (all suites green), `cargo doc` with `-D warnings`.
+- **Proofs:** `scripts/verify_proofs.py --solver z3` with telos from `tpt-telos` `bfa9637` (`target/release`).
+  Z3 must be on PATH (`C:\Users\Phillip\tools\z3-5.4.1-x64-win\bin`). All 11 proofs PASS; all 6 negative controls FAIL.
+- **Certificate:** regenerated under Z3, no drift from the committed `proofs/certificate.json` (16 claims, PASS).
+- **Checked now:** `1D.01`, `1D.03` (both in `transfer_validator_full.telos`, verified under Z3), `1F.02`
+  (deterministic locally; the drift check is wired in `nightly.yml`), `1H.03` (spec §6.1 row, Appendix A comment,
+  `docs/EVIDENCE_PACK.md` items refreshed).
+- **Still open, and why:**
+  - `1A.06`, `1D.03` AC, `1A.07c`: the CI and nightly jobs have not run on GitHub. `1D.03`'s AC also needs branch
+    protection on `master` (owner setting). `1A.07c` has no math-kernel regression test; the solver-answer part is
+    covered by `verify_proofs.py` and its negative controls.
+  - `2A.04`: the generic Rust `FeeTiers::rate_for` cannot be proven in telos (no loops). Stays open unless the
+    owner accepts it as test-only.
+  - `1H.01`, `1H.02`, `1G.03`, `1H.*`, `4.05`, `2C.02`, `2C.04`, `4.06`: need named reviewers, an owner tag
+    approval, or an external decision.
+  - `1E.01`, `1E.04`, `2D.03`, `2D.04`, `3.*`: need hardware, a docs site, a dependency refresh, or an external firm.
+  - `2D.01`, `2D.02`: publishing and the disclosure policy are owner decisions. Publishing was excluded from this pass.
+  - `4.04`: the checklist depends on Phase 3 audit experience, which does not exist yet.
 
 ---
 
@@ -407,3 +433,76 @@ Still open, and why:
   total, matches the Rust lookup, and stays in [0, 10 000]. Negative control policy_tiers_wrong_top_tier.telos
   FAILs. The generic Rust FeeTiers::rate_for cannot be proven in telos (no loops), so it stays tested, and 2A.04
   stays open for that reason.
+
+---
+
+## Phase 5 — Stub cleanup and adoption tooling (added 2026-11-13, from the project review)
+
+> Added after a review for stubs and adopter friction. All items are open. IDs are new; nothing above is renumbered.
+> Constraint: do not change the proven surface of `validate_transfer`; new behaviour goes in wrappers.
+> Plan file: `C:\Users\Phillip\.claude\plans\review-project-fix-any-humble-goblet.md`. Planned order: 5A → 5B → 5D → 5C → 5E.
+
+### 5A. Stubs, stale docs, CI hygiene
+
+- [x] `5A.01` Replaced the stale "Placeholder stubs — out of scope" comment in `Cargo.toml`; fixed the "out of scope" note in `crates/tpt-statera-core/src/lib.rs`. The `1A.02` line above is a historical record of the scaffold and is left as written.
+- [x] `5A.02` README: status line refreshed, hardcoded test count dropped, `scripts/`, `SEMVER_CONTRACTS.md`, `THREAT_MODEL.md` and `cosmwasm` added to the table.
+- [x] `5A.03` `ci.yml`: the wasm `RUSTFLAGS` override is now a job-level `env` in the `no-std` and `cosmwasm-check` jobs. The uncommitted edits are kept.
+- [x] `5A.04` Dependency audit and bench build check:
+  - `deny.toml` added and `cargo deny check` passes locally. A new `audit` job in `ci.yml` runs it.
+  - `nightly.yml` builds `bench/fm_netting` in the `proofs` job, where the sibling `tpt-telos` checkout exists. Not run on GitHub.
+  - Two advisories are ignored with reasons in `deny.toml`: `RUSTSEC-2026-0387` (`crypto-bigint` timing issues, via `cosmwasm-std`) and `RUSTSEC-2024-0436` (`paste` unmaintained, via `cosmwasm-std`). Accepted on the owner's instruction (2026-11-13). Both clear only when `cosmwasm-std` is upgraded, which is still open as `2D.04`.
+- [x] `5A.05` `repository` and `homepage` set once in `[workspace.package]` and inherited by each published-candidate crate. `publish = false` kept; `documentation` omitted (no docs.rs while unpublished).
+
+Phase 5A verification (local, 2026-11-13): `cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace`, `cargo doc --workspace --no-deps` all pass. `cargo deny check` passes. Not run: the GitHub `audit` job, the nightly bench step, and the wasm build in the YAML (the CI jobs have never run on GitHub).
+
+### 5B. API ergonomics (core, policy, runtime)
+
+- [x] `5B.01` `DenyReason` enum (`FeeRateTooHigh`, `InsufficientBalance`, `InsufficientForFee`, `RecipientOverflow`, `TreasuryOverflow`) and `validate_transfer_explained()` in `crates/tpt-statera-core/src/explain.rs`, outside the proven function.
+  - **AC:** a test asserts the explained result matches `validate_transfer` on the edge table and 50 000 random inputs.
+- [x] `5B.02` `Display` for all error and outcome types (`core::fmt` only in core); `std::error::Error` for the policy and runtime errors.
+  - Deviation: the policy and runtime crates already use `std`, so the `std::error::Error` impls are unconditional, not behind a feature.
+- [x] `5B.03` Optional `serde` feature (default off) on core and policy with `deny_unknown_fields`. Core stays dependency-free by default.
+- [x] `5B.04` Carry the deny reason through `Submission::Denied`, `Reply::Denied` and `ContractError::Denied` as an additive field.
+- [x] `5B.05` `prelude` module and constructors `TransferProposal::new` and `SystemState::new`.
+  - Deviation: Rust has no named arguments, so the constructors take positional arguments in the documented order.
+- [x] `5B.06` `validate_with_policy(state, amount, &FeeTiers, &FeeShares)` in the policy crate: tier rate, then the unchanged core validator, then the fee split. A random sweep checks conservation and the split. The `Ledger` part is split out as `5B.08`.
+- [x] `5B.07` README quick-start with a `validate_transfer` snippet and its real output, produced by `crates/tpt-statera-core/examples/quickstart.rs`.
+  - Deviation: no top-level `examples/` directory. The workspace root is not a package, so Cargo cannot build examples there. The runtime examples stay in their crate.
+- [ ] `5B.08` Optional policy on `Ledger`, so `submit` uses the tier rate. **Open, owner decision:** the ledger has one treasury account and cannot route a fee split to other accounts. Recommendation: decide the routing model first (for example, named fee accounts in the ledger), then wire it.
+
+### 5C. `statera` CLI and policy config
+
+- [x] `5C.01` New crate `crates/tpt-statera-cli` (binary `statera`) with `validate`, `simulate-fees`, `policy lint` and `cert verify`.
+  - Deviation: no separate `explain`. `validate` prints the reason on a denial. Arguments are flags, not JSON files.
+- [x] `5C.02` TOML policy config format (tiers, shares, rounding mode, dust destination) parsed into `FeeTiers` / `FeeShares`, so existing validation applies.
+- [x] `5C.03` CLI integration tests (`assert_cmd`) with golden JSON fixtures.
+
+### 5D. Reproducible proofs and certificate verifier
+
+- [x] `5D.01` Implement `tpt-statera-proof` as a solver-free certificate verifier: schema version, per-claim PASS status, sha256 of each `.telos` source and transcript, and the embedded illustrative caveat. Update its README and CHANGELOG.
+  - **AC:** accepts the committed `proofs/certificate.json` and rejects a tampered copy (tested).
+- [x] `5D.02` Ship `docs/certificate.schema.json` (JSON Schema) consistent with `docs/CERTIFICATE_SCHEMA.md`.
+- [ ] `5D.03` `Dockerfile` and `.devcontainer/` with the Rust toolchain, Z3 and `tpt-telos` at the pinned SHA `bfa9637` built with `--features z3`; `scripts/verify_proofs.py` runs unchanged inside. **Written, not built:** Docker is not installed on this machine.
+  - Finding: the z3 API port is already in `bfa9637` (its `z3_solver.rs` imports match the patch's new side). So the image does not apply `proofs/upstream-repros/tpt-telos-z3-api-0.12.patch`. The earlier "needs upstreaming" note is out of date. Confirm on the first image build.
+- [ ] `5D.04` Reusable composite GitHub Action `.github/actions/verify-certificate` (runs `statera cert verify`, optionally re-runs the proofs). **Written, not run:** GitHub only.
+- [x] `5D.05` README section "Verify without installing anything" (Docker one-liner and `statera cert verify`).
+
+### 5E. Testkit and fuzzing
+
+- [x] `5E.01` `crates/tpt-statera-testkit`: lift the seeded RNG, generators and conservation / no-overdraft / directionality checkers out of `crates/tpt-statera-core/tests/common/`; optional `proptest` strategies feature; core tests use it.
+- [ ] `5E.02` `fuzz/` (cargo-fuzz, outside the workspace like `bench/`) with targets for `validate_transfer` and `Ledger::submit`; a 60-second run per target in `nightly.yml`. **Written, not run:** libFuzzer needs nightly and Linux, and this machine is Windows.
+
+### Later (not scheduled)
+
+- [ ] `5F.01` WASM/JS and Python bindings over core (core is already `no_std` and wasm32-checked).
+- [ ] `5F.02` Kani bounded-model-checking harnesses for `validate_transfer`, as an independent check beside the Z3 proofs.
+
+### Phase 5 status (2026-11-13)
+
+Verified locally on Windows: `cargo fmt --check`, `cargo clippy --workspace --all-targets -- -D warnings`, `cargo test --workspace` (all 26 test binaries pass, including the new CLI, verifier, policy, testkit and serde tests), `cargo doc --workspace --no-deps`, `cargo deny check`, the core `no_std` build for `thumbv7m-none-eabi` and `wasm32-unknown-unknown` (with and without `serde`), and the CosmWasm wasm32 release build.
+
+Not verified here, and each needs a run to confirm: the GitHub `audit`, `fuzz` and nightly bench steps; the composite action; the Docker image (Docker is not installed); the fuzz targets (Linux, nightly); the proof scripts (Python is not installed, so `verify_proofs.py` did not run in this session and the certificate was checked only by `statera cert verify`).
+
+Still open: `5B.08`, which needs an owner decision on fee routing; `2C.02`, `2C.04` and the rest of the owner or reviewer items above.
+
+Not committed. Commits follow the owner's instruction.
