@@ -1,0 +1,44 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) 2026 TPT Solutions
+//
+// tpt-statera — linear vesting over time: two claims (todo 1C.04 / 1D.04, EC4).
+//
+// vesting_exact.telos proves one claim step. This file proves the schedule across two claims at times
+// e1 <= e2. Each claim's vested amount uses the Floor relation of floor(elapsed*alloc/total):
+//     v * total <= elapsed * alloc < v * total + total
+// The first claim pays c1 = v1. The second pays c2 = v2 - v1.
+//
+// PROVED (Z3):
+//   S1 monotone: v1 <= v2, so the second payment is never negative
+//   S2 the payments sum to the vested amount at the later time: c1 + c2 == v2
+//   S3 the total never exceeds the allocation: v2 <= alloc
+//   S4 each vested amount is at most its ideal proportion (both claims)
+//
+// Verified: `telos verify --solver z3 proofs/vesting_schedule.telos`
+
+@boundary(cpu_bound)
+@state(persistent)
+module VestingSchedule {
+    func schedule(alloc: Int, total: Int, e1: Int, e2: Int, v1: Int, v2: Int, c1: Int, c2: Int)
+        requires alloc >= 0
+        requires total >= 1
+        requires e1 >= 0
+        requires e2 >= e1
+        requires e2 <= total
+        requires v1 >= 0
+        requires v2 >= 0
+        requires v1 * total <= e1 * alloc
+        requires e1 * alloc < v1 * total + total
+        requires v2 * total <= e2 * alloc
+        requires e2 * alloc < v2 * total + total
+        requires c1 == v1
+        requires c2 == v2 - v1
+        ensures v1 <= v2
+        ensures c2 >= 0
+        ensures c1 + c2 == v2
+        ensures v2 <= alloc
+        ensures v1 * total <= e1 * alloc
+        ensures v2 * total <= e2 * alloc
+    {
+    }
+}
