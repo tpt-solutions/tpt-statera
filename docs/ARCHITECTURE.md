@@ -106,6 +106,12 @@ composition was rewritten with each balance assigned once in a single block, and
 failed as they should. Rule for every telos model in this repo: **assign each state variable at most
 once per function**, and check every model with a negative control.
 
+A third limit, tested in this pass: telos bodies cannot call a function as a statement. Calls
+are expressions that expand only inside specifications (`docs/LANGUAGE.md`, "Function & method calls").
+A per-outcome decomposition (one function per Allow or Deny reason, with the reason as a requires) was
+therefore not expressible. Telos ensures apply to every path, so the upper rounding bound and the
+overflow denial cannot be stated per branch without disjunction. They stay Rust-tested.
+
 **Consequence.** The telos files prove only the conjunctive clauses in single-assignment form, and
 each has a negative control that fails as it should. Anything stated as a disjunction, or any
 variable assigned twice, is **not** a machine-checked result. Both are upstream issues to report to
@@ -142,3 +148,98 @@ Not built yet. The CosmWasm adapter is the next runtime task.
 recorded.** A dedicated machine is preferable for third-party reproduction. Until one exists, this
 host is the reference, and the record in `bench/REFERENCE_HARDWARE.md` is authoritative. See that
 file for the settings and the limits that still apply.
+
+---
+
+## Update: approved follow-up work (third pass)
+
+### Correction to AD-6: the defects are in IR lowering, not in the solvers
+
+AD-6 called the disjunction and repeated-assignment failures "solver" defects. Re-checking with both
+engines shows otherwise. The broken disjunction model passes under Fourier–Motzkin **and** under Z3.
+The repeated-assignment control passes under both as well. So the fault is in how `tpt-telos` lowers
+`ensures` and `mutate` into constraints (`crates/tpt-telos-ir`), which both engines share. Upstream
+repros are in `proofs/upstream-repros/`.
+
+### Z3 (approved, partly done)
+
+- **Z3 is installed** from the official `z3-5.4.1-x64-win.zip` into `<local-tools-dir>/z3-5.4.1-x64-win`.
+  It is not installed system-wide, because Chocolatey needs administrator rights.
+- **The build needed three things:** `libclang` for bindgen (from the PyPI wheel, user install), the Z3
+  header and import library, and a one-file port of `tpt-telos-verifier/src/z3_solver.rs` to the `z3` 0.12
+  API. The port is saved as `proofs/upstream-repros/tpt-telos-z3-api-0.12.patch`. The sibling repo was edited
+  in place to build it, so that patch needs upstreaming.
+- **Agreement on linear proofs:** `transfer_validator`, `composition_two_transfers` and `netting_10party`
+  verify the same under Fourier–Motzkin and Z3.
+- **Nonlinear is still blocked, and Z3 does not unblock it by itself.** The front end rejects a product of
+  two variables (`non-linear multiplication is not supported in constraints`), so the Z3 backend never sees
+  it. Telos has an interval-bounding fallback for products, but it is an **approximation**, which the
+  transcript flags. It is not an exact derivation, so this project does not use it.
+- **What would unblock it:** extend the IR so that a constraint can hold a monomial (a product of
+  variables), let the Z3 backend encode it, and make Fourier–Motzkin refuse monomials. That is a design
+  change in `tpt-telos-ir`, `extract.rs` and the solver. It is **not** done, and it needs approval before
+  anyone starts it.
+
+### Cross-process serialization (approved): single writer
+
+`tpt-statera-runtime::service` runs one writer thread that owns the `Ledger` and is the only writer.
+In-process clients use `WriterService`. Cross-process clients use a line protocol over TCP (`serve_tcp`
+and `TcpClient`). It was verified across separate processes with the `ledger_server` and `ledger_client`
+examples: committed, denied, unknown-account and self-transfer replies all behave as expected.
+
+Limits, stated in the module docs: there is **no authentication, TLS or authorization**. Anyone who can
+reach the port can move funds. Bind to loopback or a private network only, and add access control at the
+transport layer before any wider use. The single writer is also a single point of failure and a throughput
+bottleneck.
+
+### CosmWasm adapter (approved, built): AD-8 implemented
+
+`crates/tpt-statera-cosmwasm` is built and tested (5 unit tests). The contract is pinned to
+`cosmwasm-std` **3.0.11**, published 2026-10-08, more than two weeks before the pin. The `wasm32` release
+build (371 KB) exports `instantiate`, `execute`, `query`, `allocate`, `deallocate` and `interface_version_8`.
+It imports only the standard host functions.
+
+Two build decisions were needed, and both are recorded in the code and in `.cargo/config.toml`:
+
+1. **Iterator feature off.** The contract never iterates storage on-chain. Leaving the feature on pulls in
+   the `db_next` import, which the link step cannot resolve.
+2. **`--allow-undefined` for the `wasm32` target only.** The host functions are plain `extern "C"` imports,
+   and this toolchain's `rust-lld` rejects them as undefined unless this flag is set. It is scoped to the
+   `wasm32-unknown-unknown` target, so host builds are unaffected.
+
+The only state-changing path is `Transfer`. It writes three balances on `Allow` and returns an error on
+`Deny`, so CosmWasm reverts the message.
+
+**Not verified here:** `cosmwasm-check`, and a run on a live chain or a `cw-multi-test` harness. Both are
+open items for the next pass.
+
+---
+
+## Update: monomials approved and implemented (fourth pass)
+
+The earlier "what would unblock it" design is now implemented. The Z3 gate was already in telos
+(`--solver z3`, the `z3` cargo feature, and `solver_backend()`). It was not enough by itself, because
+the IR rejected a product before any solver ran. The change in the sibling `tpt-telos` repo, saved as
+`proofs/upstream-repros/tpt-telos-monomials.patch`:
+
+- **IR.** `Linear` gains `products: Vec<(Linear, Linear, i64)>`, meaning `k * a * b`. Constructors,
+  add, sub, neg and scale carry it. `Linear::product(a, b)` and `has_products()` are new.
+- **Lowering.** A product of two non-constant expressions is lowered to a monomial only when exact mode
+  is on. `set_exact_nonlinear(true)` is set by `--solver z3`. The default path is unchanged. The
+  interval-approximation branch is still used by default, and it is skipped in exact mode.
+- **Bounds.** A constraint with a monomial does not give a variable bound.
+- **Z3.** `linear_to_z3` encodes monomials exactly. Model variables are collected inside products.
+- **Fourier-Motzkin.** Every public entry point refuses constraints with monomials and fails closed
+  (`entails` returns false, `model` returns none).
+
+Verified this pass:
+
+- `floor_fee_exact.telos` and `vesting_exact.telos` pass under `--solver z3`, and each has a negative
+  control that fails.
+- The default solver still refuses both with the old error.
+- The linear proofs agree under both solvers. The telos IR and verifier tests (32 + 29 + 9 + 12 + 8 + 11 + the
+  rest) pass.
+
+What is still blocked: the upper rounding bound and overflow denial, which need disjunctive ensures. The
+lowering defect in AD-6 is still open. Monomials do not fix it; that is the next item.
+
