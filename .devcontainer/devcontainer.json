@@ -1,0 +1,20 @@
+{
+  // SPDX-License-Identifier: MIT OR Apache-2.0
+  // Copyright (c) 2026 TPT Solutions
+  // Development container with Rust, Z3 and tpt-telos at the pinned commit (todo 5D.03).
+  // Open the repository in VS Code and choose "Reopen in Container".
+  "name": "tpt-statera",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "remoteEnv": {
+    "CARGO_TERM_COLOR": "always"
+  },
+  "postCreateCommand": "cargo fetch",
+  "customizations": {
+    "vscode": {
+      "extensions": ["rust-lang.rust-analyzer", "tamasfe.even-better-toml"]
+    }
+  }
+}

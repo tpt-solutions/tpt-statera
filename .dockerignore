@@ -1,0 +1,5 @@
+# Keep the image build small and independent of local build output.
+target/
+bench/**/target/
+.git/
+**/__pycache__/

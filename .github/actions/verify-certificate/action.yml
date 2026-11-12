@@ -1,0 +1,49 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Copyright (c) 2026 TPT Solutions
+#
+# Reusable check for the proof certificate (todo 5D.04). Use it after actions/checkout in a job:
+#
+#   - uses: actions/checkout@v4
+#   - uses: ./.github/actions/verify-certificate
+#     with:
+#       reprove: "false"          # "true" also re-runs every proof, which needs a telos binary
+#
+# Without `reprove`, the check is solver-free: it confirms the certificate is consistent with its inputs.
+# It does not show that the proofs hold. That needs `reprove: "true"` and `telos-path`.
+
+name: Verify proof certificate
+description: Check proofs/certificate.json against the files it names. Optionally re-run every proof.
+
+inputs:
+  certificate:
+    description: Path to the certificate, relative to the repository root.
+    required: false
+    default: proofs/certificate.json
+  reprove:
+    description: '"true" to also re-run every proof under Z3 (needs telos-path).'
+    required: false
+    default: "false"
+  telos-path:
+    description: Path to a built telos binary. Used only when reprove is "true".
+    required: false
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Build the statera CLI
+      shell: bash
+      run: cargo build --release -p tpt-statera-cli
+
+    - name: Verify the certificate (solver-free)
+      shell: bash
+      env:
+        CERT: ${{ inputs.certificate }}
+      run: ./target/release/statera cert verify "$CERT" --root "$GITHUB_WORKSPACE"
+
+    - name: Re-run every proof under Z3
+      if: inputs.reprove == 'true'
+      shell: bash
+      env:
+        TELOS: ${{ inputs.telos-path }}
+      run: python3 scripts/verify_proofs.py --telos "$TELOS" --solver z3
