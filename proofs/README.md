@@ -95,6 +95,37 @@ Why this covers the `u64` edge cases:
 Solver transcripts for every model and control are in `proofs/transcripts/verify/`, written by
 `scripts/verify_proofs.py`.
 
+## Composition over N transfers, by induction (todo 2C.03)
+
+Telos has no loops or arrays, so N steps cannot be one proof. The argument is an induction over the single-step
+theorem, and the single-step theorem is checked.
+
+Let `S_k` be the ledger after `k` transfers, and `T` its total at the start.
+
+- **Base.** `S_0` has total `T` and every balance is non-negative (the `Account` invariant).
+- **Step.** The step `k -> k+1` is one call of `validate_transfer`, validated against `S_k`. The checked theorem
+  in `transfer_validator_full.telos` has exactly this shape: its `requires` are the non-negativity of the
+  pre-state and the Floor specification of the fee, and its `ensures` include conservation of the total and
+  non-negativity of the post-state. If `S_k` satisfies the invariant, the requires hold, so `S_{k+1}` has total `T`
+  and non-negative balances.
+- **Conclusion.** By induction, every `S_k` has total `T` and no negative balance.
+
+The induction hypothesis is the checked theorem's `requires`, and the conclusion is its `ensures`. So the inductive
+step is an instance of a proof that is already checked. Nothing is assumed beyond the single-step proof.
+
+Assumptions the induction depends on (each is stated elsewhere, and each is a condition on the deployment):
+
+1. Steps are serialized, and each step is validated against the state the previous step committed. This is
+   `THREAT_MODEL.md` Assumption 2 for in-process use, and the chain's serial execution for CosmWasm
+   (`docs/BYPASS_ARGUMENT.md`, claim 1).
+2. Every step uses a fee rate in `[0, 10000]` (the `requires bps <= 10000` of the single-step proof).
+3. A `Deny` step is a no-op (`transfer_validator_full.telos`, E4), so it leaves `S_k` unchanged and the induction
+   still holds.
+
+`composition_two_transfers.telos` is a concrete two-step instance of the same argument. It is not the induction
+itself, and its mutation is a net-effect form (repeated assignments are refused by telos, AD-6). The induction is
+the argument for N steps.
+
 ## Constraint-orthogonality assumption (todo 1C.05)
 
 This is a written argument. The solver does not produce it. A reviewer must check it under todo 1G.03.

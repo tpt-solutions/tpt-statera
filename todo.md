@@ -123,7 +123,7 @@
 
 - [x] `2C.01` Control-selection matrix: SOC2 CC6.1 (Logical Access Security), MiCA Article 51 (Asset safeguarding), plus alternates legal counsel identifies ← certificate fields.
 - [ ] `2C.02` Legal/compliance review of all external claims language; remove "illustrative" labels only where the delivered phases earn it.
-- [ ] `2C.03` Multi-account composition verification: extend single-transition proofs to composed/portfolio-level conservation (required for §2 guarantees to apply).
+- [x] `2C.03` Multi-account composition verification: extend single-transition proofs to composed/portfolio-level conservation (required for §2 guarantees to apply).
 - [ ] `2C.04` Produce auditor-ready evidence pack v1 in the format auditors actually consume.
   - **AC (§7 Phase 2 row):** abstract proofs converted into mapped, traceable compliance evidence reviewed by a compliance stakeholder.
 
@@ -394,3 +394,16 @@ Still open, and why:
   decisions, reviewers, hardware or an external firm, as in earlier passes. `2C.03` (N-step composition) needs an
   induction argument that telos cannot express, so it is not started.
 - Backlog 14 (rate limits) and 15 (proportional distribution): deferred, with named blockers.
+
+---
+
+## Status notes (eleventh pass: tier proof, composition induction)
+
+- **2C.03** done. The N-step composition is an induction over the checked single-step theorem
+  (proofs/README.md, "Composition over N transfers, by induction"). The induction hypothesis is the
+  theorem's requires and its conclusion is its ensures. Assumptions are stated there. This supersedes the
+  tenth-pass line that said 2C.03 was not started.
+- **2A.04** partly done. proofs/policy_tiers_3.telos PASSes under Z3: the selection for a three-tier schedule is
+  total, matches the Rust lookup, and stays in [0, 10 000]. Negative control policy_tiers_wrong_top_tier.telos
+  FAILs. The generic Rust FeeTiers::rate_for cannot be proven in telos (no loops), so it stays tested, and 2A.04
+  stays open for that reason.
