@@ -3,19 +3,23 @@
 
 [package]
 name = "tpt-statera-proof"
-description = "Proof-certificate assembly for tpt-statera (first-draft, illustrative)."
+description = "Solver-free verifier for the illustrative first-draft proof certificate (Phase 1, todo 1F, 5D.01)."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
 readme = "README.md"
-keywords = ["formal-verification", "proof", "certificate", "z3", "telos"]
+keywords = ["formal-verification", "proof", "certificate", "audit", "telos"]
 categories = ["science"]
 publish = false
 
 [dependencies]
-tpt-statera-core = { path = "../tpt-statera-core" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
 
 [lints]
 workspace = true

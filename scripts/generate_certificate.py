@@ -43,8 +43,11 @@ CONTROL_STUBS = {
 
 
 def sha256_file(path: pathlib.Path) -> str:
+    # Hash the canonical text form (CRLF -> LF), the bytes git stores. A CRLF checkout must hash the same
+    # as an LF checkout, or the certificate depends on the platform. Matches canonical_sha256 in
+    # crates/tpt-statera-proof.
     h = hashlib.sha256()
-    h.update(path.read_bytes())
+    h.update(path.read_bytes().replace(b"\r\n", b"\n"))
     return h.hexdigest()
 
 

@@ -12,7 +12,7 @@ run's raw solver output is in `proofs/transcripts/<model>.json`.
 | `caveat` | string | The spec §7 caveat, verbatim. Must not be removed or paraphrased. |
 | `scope` | string | What the claims cover, and what they exclude. |
 | `toolchain` | object | The solver used. `solver` names the engine. |
-| `inputs` | array | One entry per proof source: `{path, sha256}`. The hash binds the certificate to the exact `.telos` text. |
+| `inputs` | array | One entry per proof source: `{path, sha256}`. The hash is of the canonical text form (CRLF to LF), which is the form git stores. |
 | `claims` | array | One entry per obligation (see below). |
 | `overall` | string | `PASS` only if every claim passes. |
 | `control_mappings` | object | Map from a control name to its status. Phase 1 values are the stub `mapping pending Phase 2`. |
@@ -21,7 +21,7 @@ run's raw solver output is in `proofs/transcripts/<model>.json`.
 
 | Field | Meaning |
 | :--- | :--- |
-| `proof_id` | `TSC-<first 8 hex of the source sha256>-<NNN>`. Stable as long as the source does not change. |
+| `proof_id` | `TSC-<first 8 hex of the source sha256>-<NNN>`. The sha256 is of the canonical text form (CRLF to LF), so it is the same on every checkout. Stable as long as the source does not change. |
 | `source` | Path of the `.telos` file. |
 | `function` | Function name the obligation belongs to. |
 | `line` | Source line of the `ensures` or invariant. |

@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "tpt-statera proof certificate (0.1-draft)",
+  "description": "Schema for proofs/certificate.json. Matches docs/CERTIFICATE_SCHEMA.md and the Rust types in crates/tpt-statera-proof. A change to any field is a new schema version. This certificate is ILLUSTRATIVE in Phase 1 and is not a compliance claim.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["caveat", "claims", "control_mappings", "inputs", "overall", "schema", "scope", "status", "toolchain"],
+  "properties": {
+    "caveat": {
+      "type": "string",
+      "const": "Phase 1's \"first-draft Proof Certificate\" is an illustrative artifact demonstrating the certificate format and workflow. It is not, by itself, a compliance claim, does not cover concurrent-access or multi-party netting scenarios (Section 8), and should not be represented to customers or auditors as a completed regulatory mapping until Phase 2 is delivered and Phase 3's independent audit has occurred."
+    },
+    "claims": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/claim" }
+    },
+    "control_mappings": {
+      "type": "object",
+      "additionalProperties": { "type": "string" }
+    },
+    "inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/input" }
+    },
+    "overall": { "type": "string", "enum": ["PASS", "FAIL"] },
+    "schema": { "type": "string", "const": "tpt-statera.proof-certificate/0.1-draft" },
+    "scope": { "type": "string", "minLength": 1 },
+    "status": { "type": "string", "const": "ILLUSTRATIVE" },
+    "toolchain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["solver"],
+      "properties": {
+        "solver": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "$defs": {
+    "input": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "function", "kind", "line", "path_instances", "proof_id", "result", "source", "transcript"],
+      "properties": {
+        "description": { "type": "string", "minLength": 1 },
+        "function": { "type": "string", "minLength": 1 },
+        "kind": { "type": "string", "minLength": 1 },
+        "line": { "type": "integer", "minimum": 1 },
+        "path_instances": { "type": "integer", "minimum": 1 },
+        "proof_id": { "type": "string", "pattern": "^TSC-[0-9a-f]{8}-[0-9]{3}$" },
+        "result": { "type": "string", "enum": ["PASS", "FAIL"] },
+        "source": { "type": "string", "minLength": 1 },
+        "transcript": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
