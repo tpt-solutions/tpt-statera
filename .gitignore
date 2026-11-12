@@ -64,3 +64,12 @@ $RECYCLE.BIN/
 *.log
 tmp/
 temp/
+
+# Bench harness is its own workspace (bench/fm_netting). Its build output is not committed.
+bench/fm_netting/target/
+bench/fm_netting/Cargo.lock
+
+# Python caches from helper scripts
+__pycache__/
+*.pyc
+
