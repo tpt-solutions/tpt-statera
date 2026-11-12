@@ -53,7 +53,7 @@ restated denial clause.
   operator. The relation itself, with the exact product, is in `transfer_validator_full.telos`.
 - **Ideal layer as a separate exact-rational model.** Not modelled. The Floor relation stands in for it.
 - **Vesting over time.** Only the claim step is modelled (`vesting_exact.telos`).
-- **Repeated assignment.** Still a telos lowering question. Models here assign each variable once per path.
+- **Repeated assignment.** Refused by telos. Models here assign each variable once per path, as the verifier requires.
 
 ## Constraint-orthogonality assumption (todo 1C.05)
 
@@ -109,7 +109,7 @@ The linear proofs above verify the same under `--solver z3` and the default solv
 Upstream repros (`proofs/upstream-repros/`):
 
 - `nonlinear_product_rejected.telos`: rejected by the default solver; verifies under `--solver z3`.
-- `repeated_assignment_neg_control_passes.telos`: a broken model that passes under both solvers. This is still open: the repeated-assignment handling needs its own investigation (not the disjunction defect).
+- `repeated_assignment_neg_control_passes.telos`: a broken model that used to pass. It is now refused with `field ... is assigned more than once on one path` (tpt-telos `980a92f`). The earlier cause was a bare expression statement that was lowered as an assignment of `0`, which made the premises contradictory.
 - `disjunction_overflow_neg_control_passes.telos`: a broken model that used to pass under both solvers. It now FAILs under both, since the verifier's disjunction fix (`60d44cf`).
 - `tpt-telos-z3-api-0.12.patch`: the port of `z3_solver.rs` to the z3 0.12 API needed to build the feature.
 - `tpt-telos-monomials.patch`: the monomial change set (see above).

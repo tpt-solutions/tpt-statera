@@ -1,8 +1,6 @@
 # Backlog for the Next Planning Cycle (todo 4.07)
-
 Items deferred from Phase 1–2, in the order the evidence says they matter. Each names the blocker,
 so the next cycle can start from the reason, not the title.
-
 | # | Item | Blocker | Spec / todo ref |
 | :-- | :--- | :--- | :--- |
 | 1 | Realization proofs (upper rounding bound, overflow denial, restated denial) | Done under `--solver z3` in `proofs/transfer_validator_full.telos` (tpt-telos `60d44cf` fixed the disjunction grouping). Remaining: a separate exact-rational ideal layer, if needed | 1D.01–1D.03 |
@@ -17,3 +15,4 @@ so the next cycle can start from the reason, not the title.
 | 10 | N-step composition by induction in the solver | Composition is proven for two steps | 2C.03 |
 | 11 | Certificate mappings beyond stubs | Counsel review | 2C.02, 1F.04 |
 | 12 | Multi-currency ledgers and non-linear vesting | Deferred scope | spec §2, 4.07 |
+| 13 | Generated code does not return a function's trailing value | The code generators emit it as an expression statement, and the generated signature has no return type. Needs a codegen change for return types and tail returns (verification is unaffected) | telos codegen |

@@ -279,3 +279,16 @@ Still open, and why:
   as a separate exact-rational model. Vesting over the full schedule.
 - **Commits:** statera and tpt-telos work was committed to `master` in stages (see `git log`).
 
+---
+
+## Status notes (seventh pass: telos soundness fixes)
+
+- **Disjunction grouping** fixed earlier (`60d44cf`). The full model verifies under Z3, and its negative controls FAIL.
+- **Expression statements** were lowered as assignments of `0`. A false claim `tokens == 0` passed. Fixed with
+  `Stmt::Expr` (`980a92f`), with a regression test.
+- **Repeated field assignment** passed vacuously. It is now refused with an error (`980a92f`), with a regression test.
+- **Certificate** regenerated with the fixed binary: byte-identical, 16 claims, all PASS.
+- **Open:** generated code does not return a function's trailing value (codegen, backlog item 13). Verification is
+  unaffected.
+- **Commits:** telos `60d44cf`, `980a92f`; statera follow-up commits in `git log`.
+

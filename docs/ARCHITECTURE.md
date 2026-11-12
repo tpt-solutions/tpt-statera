@@ -161,8 +161,7 @@ under Z3. The disjunction defect was in the verifier's grouping (`crates/tpt-tel
 Each DNF branch is a conjunction, but the verifier treated its constraints as alternatives, so `(A && B) || C`
 passed on `A` alone. The fix is tpt-telos commit `60d44cf`. A branch now holds only when all its checks hold,
 and the group holds when one branch does. The overflow-denial control now FAILs under both solvers. Regression
-tests are in `crates/tpt-telos-verifier/tests/disjunction_branches.rs`. The repeated-assignment defect is still
-open; its repro is in `proofs/upstream-repros/`.
+tests are in `crates/tpt-telos-verifier/tests/disjunction_branches.rs`.
 
 ### Z3 (approved, partly done)
 
@@ -245,4 +244,29 @@ Verified this pass:
 
 What is still blocked: the upper rounding bound and overflow denial, which need disjunctive ensures. The
 lowering defect in AD-6 is still open. Monomials do not fix it; that is the next item.
+
+---
+
+## Update: statement and reassignment fixes (seventh pass)
+
+Two more soundness defects in telos were found and fixed (tpt-telos `980a92f`).
+
+1. **Expression statements were assignments of 0.** The parser turned any bare expression statement, including a
+   function's trailing value, into an assignment of `0` to its target. That added a false equation on the target's
+   post-state, so a false claim `tokens == 0` passed. The parser now produces `Stmt::Expr`, which has no effect on
+   state. Confirmed with the pre-change binary before the fix, and FAILs after it.
+2. **Repeated assignment passed vacuously.** Two assignments to one field give two equations on the same post-state
+   variable. Their premises are then unsatisfiable, and every claim passes. The IR now refuses a field assigned more
+   than once on one path.
+
+Side effects, checked:
+
+- The default-solver results on every telos example and on this repo's proofs are unchanged. Three bundled examples had been
+  rejected by the reassignment check only because of defect 1, and they verify again.
+- The certificate and transcript regenerate byte-identically.
+- The statement tests are in `crates/tpt-telos-verifier/tests/statements.rs`.
+
+**Open, not verification:** the code generators emit a function's trailing value as an expression statement, and
+the generated signature has no return type. So the generated function does not return that value. That is a
+code-generation limitation and is recorded in the backlog.
 
