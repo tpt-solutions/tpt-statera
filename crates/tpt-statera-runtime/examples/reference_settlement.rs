@@ -100,7 +100,10 @@ fn main() -> std::io::Result<()> {
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let proofs = repo.join("proofs");
     let mut copied = Vec::new();
-    for rel in ["certificate.json", "transcripts/transfer_validator.json"] {
+    for rel in [
+        "certificate.json",
+        "transcripts/transfer_validator_full.json",
+    ] {
         let src = proofs.join(rel);
         if src.exists() {
             let dst = out.join(rel.replace('/', "_"));

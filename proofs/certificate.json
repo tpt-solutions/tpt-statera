@@ -2,104 +2,180 @@
   "caveat": "Phase 1's \"first-draft Proof Certificate\" is an illustrative artifact demonstrating the certificate format and workflow. It is not, by itself, a compliance claim, does not cover concurrent-access or multi-party netting scenarios (Section 8), and should not be represented to customers or auditors as a completed regulatory mapping until Phase 2 is delivered and Phase 3's independent audit has occurred.",
   "claims": [
     {
-      "description": "ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)",
+      "description": "invariant Account maintained: recipient.balance >= 0",
       "function": "validate",
-      "line": 62,
-      "path_instances": 6,
-      "proof_id": "TSC-9ccd90b1-001",
+      "kind": "obligation",
+      "line": 29,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-001",
       "result": "PASS",
-      "source": "proofs/transfer_validator.telos",
-      "transcript": "proofs/transcripts/transfer_validator.json"
-    },
-    {
-      "description": "ensures: sender.balance >= 0",
-      "function": "validate",
-      "line": 65,
-      "path_instances": 6,
-      "proof_id": "TSC-9ccd90b1-002",
-      "result": "PASS",
-      "source": "proofs/transfer_validator.telos",
-      "transcript": "proofs/transcripts/transfer_validator.json"
-    },
-    {
-      "description": "ensures: sender.balance <= old(sender.balance)",
-      "function": "validate",
-      "line": 67,
-      "path_instances": 6,
-      "proof_id": "TSC-9ccd90b1-003",
-      "result": "PASS",
-      "source": "proofs/transfer_validator.telos",
-      "transcript": "proofs/transcripts/transfer_validator.json"
-    },
-    {
-      "description": "ensures: recipient.balance >= old(recipient.balance)",
-      "function": "validate",
-      "line": 68,
-      "path_instances": 6,
-      "proof_id": "TSC-9ccd90b1-004",
-      "result": "PASS",
-      "source": "proofs/transfer_validator.telos",
-      "transcript": "proofs/transcripts/transfer_validator.json"
-    },
-    {
-      "description": "ensures: treasury.balance >= old(treasury.balance)",
-      "function": "validate",
-      "line": 69,
-      "path_instances": 6,
-      "proof_id": "TSC-9ccd90b1-005",
-      "result": "PASS",
-      "source": "proofs/transfer_validator.telos",
-      "transcript": "proofs/transcripts/transfer_validator.json"
-    },
-    {
-      "description": "ensures: treasury.balance - old(treasury.balance) * 10000 <= numer",
-      "function": "validate",
-      "line": 72,
-      "path_instances": 6,
-      "proof_id": "TSC-9ccd90b1-006",
-      "result": "PASS",
-      "source": "proofs/transfer_validator.telos",
-      "transcript": "proofs/transcripts/transfer_validator.json"
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
     },
     {
       "description": "invariant Account maintained: sender.balance >= 0",
       "function": "validate",
-      "line": 44,
-      "path_instances": 6,
-      "proof_id": "TSC-9ccd90b1-007",
+      "kind": "obligation",
+      "line": 29,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-002",
       "result": "PASS",
-      "source": "proofs/transfer_validator.telos",
-      "transcript": "proofs/transcripts/transfer_validator.json"
-    },
-    {
-      "description": "invariant Account maintained: recipient.balance >= 0",
-      "function": "validate",
-      "line": 44,
-      "path_instances": 6,
-      "proof_id": "TSC-9ccd90b1-008",
-      "result": "PASS",
-      "source": "proofs/transfer_validator.telos",
-      "transcript": "proofs/transcripts/transfer_validator.json"
-    },
-    {
-      "description": "invariant Account maintained: treasury.balance >= 0",
-      "function": "validate",
-      "line": 44,
-      "path_instances": 6,
-      "proof_id": "TSC-9ccd90b1-009",
-      "result": "PASS",
-      "source": "proofs/transfer_validator.telos",
-      "transcript": "proofs/transcripts/transfer_validator.json"
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
     },
     {
       "description": "invariant Account maintained: status.balance >= 0",
       "function": "validate",
-      "line": 44,
-      "path_instances": 6,
-      "proof_id": "TSC-9ccd90b1-010",
+      "kind": "obligation",
+      "line": 29,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-003",
       "result": "PASS",
-      "source": "proofs/transfer_validator.telos",
-      "transcript": "proofs/transcripts/transfer_validator.json"
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "invariant Account maintained: treasury.balance >= 0",
+      "function": "validate",
+      "kind": "obligation",
+      "line": 29,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-004",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)",
+      "function": "validate",
+      "kind": "obligation",
+      "line": 46,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-005",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "ensures: sender.balance >= 0",
+      "function": "validate",
+      "kind": "obligation",
+      "line": 49,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-006",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "ensures: sender.balance <= old(sender.balance)",
+      "function": "validate",
+      "kind": "obligation",
+      "line": 51,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-007",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "ensures: recipient.balance >= old(recipient.balance)",
+      "function": "validate",
+      "kind": "obligation",
+      "line": 52,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-008",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "ensures: treasury.balance >= old(treasury.balance)",
+      "function": "validate",
+      "kind": "obligation",
+      "line": 53,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-009",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance)",
+      "function": "validate",
+      "kind": "disjunction",
+      "line": 55,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-010",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance)",
+      "function": "validate",
+      "kind": "disjunction",
+      "line": 56,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-011",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance)",
+      "function": "validate",
+      "kind": "disjunction",
+      "line": 57,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-012",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps",
+      "function": "validate",
+      "kind": "obligation",
+      "line": 59,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-013",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000",
+      "function": "validate",
+      "kind": "disjunction",
+      "line": 60,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-014",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0",
+      "function": "validate",
+      "kind": "disjunction",
+      "line": 62,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-015",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
+    },
+    {
+      "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000",
+      "function": "validate",
+      "kind": "disjunction",
+      "line": 64,
+      "path_instances": 4,
+      "proof_id": "TSC-9edab4db-016",
+      "result": "PASS",
+      "source": "proofs/transfer_validator_full.telos",
+      "transcript": "proofs/transcripts/transfer_validator_full.json"
     }
   ],
   "control_mappings": {
@@ -108,15 +184,15 @@
   },
   "inputs": [
     {
-      "path": "proofs/transfer_validator.telos",
-      "sha256": "9ccd90b1320cc383678b4b37984337d532811b7097b6cdac39549a18673e2c99"
+      "path": "proofs/transfer_validator_full.telos",
+      "sha256": "9edab4dbd03f2c64cd52bec2f94df7224bac433abd2b51520c5c57c4603aaa5e"
     }
   ],
   "overall": "PASS",
   "schema": "tpt-statera.proof-certificate/0.1-draft",
-  "scope": "validate_transfer: linear conservation core under the Floor-fee specification; not multi-party netting; disjunctive clauses excluded (see proofs/README.md)",
+  "scope": "validate_transfer: all clauses (conservation, no-overdraft, no-op denial, both rounding bounds, overflow denial, restated denial) with the exact Floor product, checked by z3; not multi-party netting",
   "status": "ILLUSTRATIVE",
   "toolchain": {
-    "solver": "tpt-telos verify (built-in Fourier-Motzkin)"
+    "solver": "tpt-telos verify --solver z3"
   }
 }

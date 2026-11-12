@@ -24,7 +24,9 @@ import subprocess
 import sys
 
 REPO = pathlib.Path(__file__).resolve().parent.parent
-CERT_PROOFS = ["proofs/transfer_validator.telos"]
+CERT_PROOFS = ["proofs/transfer_validator_full.telos"]
+# The full model needs exact monomials and the fixed disjunction lowering, so it runs under Z3.
+SOLVER_FLAG = {"fourier-motzkin": [], "z3": ["--solver", "z3"]}
 OUT_PATH = REPO / "proofs" / "certificate.json"
 TRANSCRIPT_DIR = REPO / "proofs" / "transcripts"
 SCHEMA = "tpt-statera.proof-certificate/0.1-draft"
@@ -46,9 +48,9 @@ def sha256_file(path: pathlib.Path) -> str:
     return h.hexdigest()
 
 
-def run_telos(telos: str, rel_path: str) -> dict:
+def run_telos(telos: str, rel_path: str, solver: str) -> dict:
     proc = subprocess.run(
-        [telos, "verify", rel_path, "--json"],
+        [telos, "verify", rel_path, "--json", *SOLVER_FLAG[solver]],
         cwd=REPO,
         capture_output=True,
         text=True,
@@ -62,6 +64,8 @@ def run_telos(telos: str, rel_path: str) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--telos", required=True, help="path to telos binary")
+    ap.add_argument("--solver", choices=sorted(SOLVER_FLAG), default="z3",
+                    help="solver for the proofs (default z3; the full model needs it)")
     args = ap.parse_args()
 
     TRANSCRIPT_DIR.mkdir(parents=True, exist_ok=True)
@@ -75,37 +79,43 @@ def main() -> int:
         short = digest[:8]
         inputs.append({"path": rel, "sha256": digest})
 
-        transcript = run_telos(args.telos, rel)
+        transcript = run_telos(args.telos, rel, args.solver)
         t_name = pathlib.Path(rel).stem + ".json"
         (TRANSCRIPT_DIR / t_name).write_text(
             json.dumps(transcript, indent=2, sort_keys=True) + "\n", encoding="utf-8"
         )
         all_passed &= bool(transcript.get("passed"))
 
-        # The solver reports each obligation once per control-flow path. Collapse
-        # identical (function, line, description) entries into one claim. A claim
-        # passes only if every path instance passes.
+        # The solver reports each obligation once per control-flow path, and names the path
+        # variants `function[branch k]`. A claim is one obligation: an independent check, or a
+        # disjunction group. Each claim passes only if it passes on every path (AND across paths).
+        # A disjunction group passes when one of its DNF branches holds (see telos CLI JSON).
         merged = {}
-        order = []
         for fn in transcript.get("functions", []):
+            fname = re.sub(r"\[branch \d+\]$", "", fn.get("func_name") or "")
             for chk in fn.get("checks", []):
-                # Path variants appear as "validate[branch k]"; normalise the name.
-                fname = re.sub(r"\[branch \d+\]$", "", fn.get("func_name") or "")
-                key = (fname, chk.get("location", {}).get("line"), chk.get("description"))
-                if key not in merged:
-                    merged[key] = {"passed": True, "instances": 0}
-                    order.append(key)
-                merged[key]["instances"] += 1
-                merged[key]["passed"] &= bool(chk.get("passed"))
-        for idx, key in enumerate(order, start=1):
-            fname, line, desc = key
+                if chk.get("or_group") is not None:
+                    continue  # reported through the group verdict below
+                key = (rel, fname, chk.get("location", {}).get("line"), chk.get("description"), "check")
+                entry = merged.setdefault(key, {"passed": True, "instances": 0})
+                entry["instances"] += 1
+                entry["passed"] &= bool(chk.get("passed"))
+            for grp in fn.get("groups", []):
+                key = (rel, fname, grp.get("location", {}).get("line"), grp.get("description"), "group")
+                entry = merged.setdefault(key, {"passed": True, "instances": 0})
+                entry["instances"] += 1
+                entry["passed"] &= bool(grp.get("passed"))
+        # Sorted so the certificate does not depend on check order.
+        for idx, key in enumerate(sorted(merged, key=lambda k: (k[0], k[1], k[2] or 0, k[3] or "", k[4])), start=1):
+            src, fname, line, desc, kind = key
             claims.append(
                 {
                     "proof_id": f"TSC-{short}-{idx:03d}",
-                    "source": rel,
+                    "source": src,
                     "function": fname,
                     "line": line,
                     "description": desc,
+                    "kind": "disjunction" if kind == "group" else "obligation",
                     "result": "PASS" if merged[key]["passed"] else "FAIL",
                     "path_instances": merged[key]["instances"],
                     "transcript": f"proofs/transcripts/{t_name}",
@@ -122,8 +132,8 @@ def main() -> int:
         "schema": SCHEMA,
         "status": "ILLUSTRATIVE",
         "caveat": CAVEAT,
-        "scope": "validate_transfer: linear conservation core under the Floor-fee specification; not multi-party netting; disjunctive clauses excluded (see proofs/README.md)",
-        "toolchain": {"solver": "tpt-telos verify (built-in Fourier-Motzkin)"},
+        "scope": "validate_transfer: all clauses (conservation, no-overdraft, no-op denial, both rounding bounds, overflow denial, restated denial) with the exact Floor product, checked by " + args.solver + "; not multi-party netting",
+        "toolchain": {"solver": "tpt-telos verify --solver " + args.solver},
         "inputs": inputs,
         "claims": claims,
         "overall": "PASS" if all_passed else "FAIL",

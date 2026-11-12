@@ -1,0 +1,1866 @@
+{
+  "file": "transfer_validator_full.telos",
+  "functions": [
+    {
+      "all_passed": true,
+      "checks": [
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: recipient.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: sender.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: status.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: treasury.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 46
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: sender.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 49
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: sender.balance <= old(sender.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 51
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: recipient.balance >= old(recipient.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 52
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: treasury.balance >= old(treasury.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 53
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 55
+          },
+          "or_branch": 0,
+          "or_group": 0,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 1,
+            "bps": 0,
+            "cap": 1,
+            "fee": 0,
+            "recipient.balance": 0,
+            "recipient.balance'": 1,
+            "sender.balance": 1,
+            "sender.balance'": 0,
+            "status.balance": 0,
+            "status.balance'": 1,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 55
+          },
+          "or_branch": 1,
+          "or_group": 0,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 56
+          },
+          "or_branch": 0,
+          "or_group": 1,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 1,
+            "bps": 0,
+            "cap": 1,
+            "fee": 0,
+            "recipient.balance": 0,
+            "recipient.balance'": 1,
+            "sender.balance": 1,
+            "sender.balance'": 0,
+            "status.balance": 0,
+            "status.balance'": 1,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 56
+          },
+          "or_branch": 1,
+          "or_group": 1,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 57
+          },
+          "or_branch": 0,
+          "or_group": 2,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 3,
+            "bps": 6667,
+            "cap": 4,
+            "fee": 2,
+            "recipient.balance": 0,
+            "recipient.balance'": 3,
+            "sender.balance": 6,
+            "sender.balance'": 1,
+            "status.balance": 0,
+            "status.balance'": 1,
+            "treasury.balance": 0,
+            "treasury.balance'": 2
+          },
+          "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 57
+          },
+          "or_branch": 1,
+          "or_group": 2,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 59
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 0,
+            "bps": 0,
+            "cap": 0,
+            "fee": 0,
+            "recipient.balance": 0,
+            "recipient.balance'": 0,
+            "sender.balance": 0,
+            "sender.balance'": 0,
+            "status.balance": 0,
+            "status.balance'": 1,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 60
+          },
+          "or_branch": 0,
+          "or_group": 3,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 60
+          },
+          "or_branch": 1,
+          "or_group": 3,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_branch": 0,
+          "or_group": 4,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_branch": 0,
+          "or_group": 4,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 0,
+            "bps": 0,
+            "cap": 0,
+            "fee": 0,
+            "recipient.balance": 0,
+            "recipient.balance'": 0,
+            "sender.balance": 0,
+            "sender.balance'": 0,
+            "status.balance": 0,
+            "status.balance'": 1,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_branch": 1,
+          "or_group": 4,
+          "passed": false
+        },
+        {
+          "counterexample": {
+            "amount": 1,
+            "bps": 1,
+            "cap": 1,
+            "fee": 0,
+            "recipient.balance": 0,
+            "recipient.balance'": 1,
+            "sender.balance": 1,
+            "sender.balance'": 0,
+            "status.balance": 0,
+            "status.balance'": 1,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_branch": 0,
+          "or_group": 5,
+          "passed": false
+        },
+        {
+          "counterexample": {
+            "amount": 0,
+            "bps": 0,
+            "cap": 0,
+            "fee": 0,
+            "recipient.balance": 0,
+            "recipient.balance'": 0,
+            "sender.balance": 0,
+            "sender.balance'": 0,
+            "status.balance": 0,
+            "status.balance'": 1,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_branch": 1,
+          "or_group": 5,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 2]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_branch": 2,
+          "or_group": 5,
+          "passed": true
+        }
+      ],
+      "func_name": "validate[branch 0]",
+      "groups": [
+        {
+          "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance)",
+          "location": {
+            "column": 17,
+            "line": 55
+          },
+          "or_group": 0,
+          "passed": true
+        },
+        {
+          "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance)",
+          "location": {
+            "column": 17,
+            "line": 56
+          },
+          "or_group": 1,
+          "passed": true
+        },
+        {
+          "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance)",
+          "location": {
+            "column": 17,
+            "line": 57
+          },
+          "or_group": 2,
+          "passed": true
+        },
+        {
+          "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000",
+          "location": {
+            "column": 17,
+            "line": 60
+          },
+          "or_group": 3,
+          "passed": true
+        },
+        {
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0",
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_group": 4,
+          "passed": true
+        },
+        {
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000",
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_group": 5,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "all_passed": true,
+      "checks": [
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: recipient.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: sender.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: status.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: treasury.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 46
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: sender.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 49
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: sender.balance <= old(sender.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 51
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: recipient.balance >= old(recipient.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 52
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: treasury.balance >= old(treasury.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 53
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 3734,
+            "bps": 5056,
+            "cap": 32765,
+            "fee": 1887,
+            "recipient.balance": 12588,
+            "recipient.balance'": 12588,
+            "sender.balance": 28161,
+            "sender.balance'": 28161,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 32545,
+            "treasury.balance'": 32545
+          },
+          "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 55
+          },
+          "or_branch": 0,
+          "or_group": 0,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 55
+          },
+          "or_branch": 1,
+          "or_group": 0,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 3734,
+            "bps": 5056,
+            "cap": 32765,
+            "fee": 1887,
+            "recipient.balance": 12588,
+            "recipient.balance'": 12588,
+            "sender.balance": 28161,
+            "sender.balance'": 28161,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 32545,
+            "treasury.balance'": 32545
+          },
+          "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 56
+          },
+          "or_branch": 0,
+          "or_group": 1,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 56
+          },
+          "or_branch": 1,
+          "or_group": 1,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 3734,
+            "bps": 5056,
+            "cap": 32765,
+            "fee": 1887,
+            "recipient.balance": 12588,
+            "recipient.balance'": 12588,
+            "sender.balance": 28161,
+            "sender.balance'": 28161,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 32545,
+            "treasury.balance'": 32545
+          },
+          "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 57
+          },
+          "or_branch": 0,
+          "or_group": 2,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 57
+          },
+          "or_branch": 1,
+          "or_group": 2,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 59
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 60
+          },
+          "or_branch": 0,
+          "or_group": 3,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 15971,
+            "bps": 9895,
+            "cap": 24980,
+            "fee": 15803,
+            "recipient.balance": 4409,
+            "recipient.balance'": 4409,
+            "sender.balance": 32738,
+            "sender.balance'": 32738,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 17415,
+            "treasury.balance'": 17415
+          },
+          "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 60
+          },
+          "or_branch": 1,
+          "or_group": 3,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_branch": 0,
+          "or_group": 4,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 3734,
+            "bps": 5056,
+            "cap": 32765,
+            "fee": 1887,
+            "recipient.balance": 12588,
+            "recipient.balance'": 12588,
+            "sender.balance": 28161,
+            "sender.balance'": 28161,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 32545,
+            "treasury.balance'": 32545
+          },
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_branch": 0,
+          "or_group": 4,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_branch": 1,
+          "or_group": 4,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 1,
+            "bps": 1,
+            "cap": 1,
+            "fee": 0,
+            "recipient.balance": 0,
+            "recipient.balance'": 0,
+            "sender.balance": 1,
+            "sender.balance'": 1,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 2,
+            "treasury.balance'": 2
+          },
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_branch": 0,
+          "or_group": 5,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_branch": 1,
+          "or_group": 5,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 2]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_branch": 2,
+          "or_group": 5,
+          "passed": true
+        }
+      ],
+      "func_name": "validate[branch 1]",
+      "groups": [
+        {
+          "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance)",
+          "location": {
+            "column": 17,
+            "line": 55
+          },
+          "or_group": 0,
+          "passed": true
+        },
+        {
+          "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance)",
+          "location": {
+            "column": 17,
+            "line": 56
+          },
+          "or_group": 1,
+          "passed": true
+        },
+        {
+          "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance)",
+          "location": {
+            "column": 17,
+            "line": 57
+          },
+          "or_group": 2,
+          "passed": true
+        },
+        {
+          "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000",
+          "location": {
+            "column": 17,
+            "line": 60
+          },
+          "or_group": 3,
+          "passed": true
+        },
+        {
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0",
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_group": 4,
+          "passed": true
+        },
+        {
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000",
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_group": 5,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "all_passed": true,
+      "checks": [
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: recipient.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: sender.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: status.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: treasury.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 46
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: sender.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 49
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: sender.balance <= old(sender.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 51
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: recipient.balance >= old(recipient.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 52
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: treasury.balance >= old(treasury.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 53
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 16395,
+            "bps": 9974,
+            "cap": 2766,
+            "fee": 16352,
+            "recipient.balance": 13607,
+            "recipient.balance'": 13607,
+            "sender.balance": 32757,
+            "sender.balance'": 32757,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 55
+          },
+          "or_branch": 0,
+          "or_group": 0,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 55
+          },
+          "or_branch": 1,
+          "or_group": 0,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 16395,
+            "bps": 9974,
+            "cap": 2766,
+            "fee": 16352,
+            "recipient.balance": 13607,
+            "recipient.balance'": 13607,
+            "sender.balance": 32757,
+            "sender.balance'": 32757,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 56
+          },
+          "or_branch": 0,
+          "or_group": 1,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 56
+          },
+          "or_branch": 1,
+          "or_group": 1,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 16395,
+            "bps": 9974,
+            "cap": 2766,
+            "fee": 16352,
+            "recipient.balance": 13607,
+            "recipient.balance'": 13607,
+            "sender.balance": 32757,
+            "sender.balance'": 32757,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 57
+          },
+          "or_branch": 0,
+          "or_group": 2,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 57
+          },
+          "or_branch": 1,
+          "or_group": 2,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 59
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 60
+          },
+          "or_branch": 0,
+          "or_group": 3,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 2067,
+            "bps": 1315,
+            "cap": 7151,
+            "fee": 271,
+            "recipient.balance": 7166,
+            "recipient.balance'": 7166,
+            "sender.balance": 30430,
+            "sender.balance'": 30430,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 60
+          },
+          "or_branch": 1,
+          "or_group": 3,
+          "passed": false
+        },
+        {
+          "counterexample": {
+            "amount": 16395,
+            "bps": 9974,
+            "cap": 2766,
+            "fee": 16352,
+            "recipient.balance": 13607,
+            "recipient.balance'": 13607,
+            "sender.balance": 32757,
+            "sender.balance'": 32757,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_branch": 0,
+          "or_group": 4,
+          "passed": false
+        },
+        {
+          "counterexample": {
+            "amount": 16383,
+            "bps": 8248,
+            "cap": 17093,
+            "fee": 13512,
+            "recipient.balance": 18946,
+            "recipient.balance'": 18946,
+            "sender.balance": 31545,
+            "sender.balance'": 31545,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 22943,
+            "treasury.balance'": 22943
+          },
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_branch": 0,
+          "or_group": 4,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_branch": 1,
+          "or_group": 4,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 1,
+            "bps": 9999,
+            "cap": 0,
+            "fee": 0,
+            "recipient.balance": 1,
+            "recipient.balance'": 1,
+            "sender.balance": 1,
+            "sender.balance'": 1,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_branch": 0,
+          "or_group": 5,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_branch": 1,
+          "or_group": 5,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 2]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_branch": 2,
+          "or_group": 5,
+          "passed": true
+        }
+      ],
+      "func_name": "validate[branch 2]",
+      "groups": [
+        {
+          "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance)",
+          "location": {
+            "column": 17,
+            "line": 55
+          },
+          "or_group": 0,
+          "passed": true
+        },
+        {
+          "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance)",
+          "location": {
+            "column": 17,
+            "line": 56
+          },
+          "or_group": 1,
+          "passed": true
+        },
+        {
+          "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance)",
+          "location": {
+            "column": 17,
+            "line": 57
+          },
+          "or_group": 2,
+          "passed": true
+        },
+        {
+          "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000",
+          "location": {
+            "column": 17,
+            "line": 60
+          },
+          "or_group": 3,
+          "passed": true
+        },
+        {
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0",
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_group": 4,
+          "passed": true
+        },
+        {
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000",
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_group": 5,
+          "passed": true
+        }
+      ]
+    },
+    {
+      "all_passed": true,
+      "checks": [
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: recipient.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: sender.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: status.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "invariant Account maintained: treasury.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": false,
+          "location": {
+            "column": 9,
+            "line": 29
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 46
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: sender.balance >= 0",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 49
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: sender.balance <= old(sender.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 51
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: recipient.balance >= old(recipient.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 52
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: treasury.balance >= old(treasury.balance)",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 53
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 1,
+            "bps": 0,
+            "cap": 0,
+            "fee": 0,
+            "recipient.balance": 0,
+            "recipient.balance'": 0,
+            "sender.balance": 0,
+            "sender.balance'": 0,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 55
+          },
+          "or_branch": 0,
+          "or_group": 0,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 55
+          },
+          "or_branch": 1,
+          "or_group": 0,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 1,
+            "bps": 0,
+            "cap": 0,
+            "fee": 0,
+            "recipient.balance": 0,
+            "recipient.balance'": 0,
+            "sender.balance": 0,
+            "sender.balance'": 0,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 56
+          },
+          "or_branch": 0,
+          "or_group": 1,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 56
+          },
+          "or_branch": 1,
+          "or_group": 1,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 1,
+            "bps": 0,
+            "cap": 0,
+            "fee": 0,
+            "recipient.balance": 0,
+            "recipient.balance'": 0,
+            "sender.balance": 0,
+            "sender.balance'": 0,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 57
+          },
+          "or_branch": 0,
+          "or_group": 2,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 57
+          },
+          "or_branch": 1,
+          "or_group": 2,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 59
+          },
+          "or_branch": null,
+          "or_group": null,
+          "passed": true
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 60
+          },
+          "or_branch": 0,
+          "or_group": 3,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 11513,
+            "bps": 9815,
+            "cap": 0,
+            "fee": 11300,
+            "recipient.balance": 0,
+            "recipient.balance'": 0,
+            "sender.balance": 16386,
+            "sender.balance'": 16386,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 60
+          },
+          "or_branch": 1,
+          "or_group": 3,
+          "passed": false
+        },
+        {
+          "counterexample": {
+            "amount": 30673,
+            "bps": 1139,
+            "cap": 32764,
+            "fee": 3493,
+            "recipient.balance": 2097,
+            "recipient.balance'": 2097,
+            "sender.balance": 9222,
+            "sender.balance'": 9222,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_branch": 0,
+          "or_group": 4,
+          "passed": false
+        },
+        {
+          "counterexample": {
+            "amount": 32719,
+            "bps": 9999,
+            "cap": 8122,
+            "fee": 32715,
+            "recipient.balance": 0,
+            "recipient.balance'": 0,
+            "sender.balance": 102,
+            "sender.balance'": 102,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 24699,
+            "treasury.balance'": 24699
+          },
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_branch": 0,
+          "or_group": 4,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_branch": 1,
+          "or_group": 4,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 11834,
+            "bps": 9207,
+            "cap": 0,
+            "fee": 10895,
+            "recipient.balance": 0,
+            "recipient.balance'": 0,
+            "sender.balance": 4062,
+            "sender.balance'": 4062,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 0]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_branch": 0,
+          "or_group": 5,
+          "passed": false
+        },
+        {
+          "counterexample": null,
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 1]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_branch": 1,
+          "or_group": 5,
+          "passed": true
+        },
+        {
+          "counterexample": {
+            "amount": 32767,
+            "bps": 6403,
+            "cap": 0,
+            "fee": 20980,
+            "recipient.balance": 0,
+            "recipient.balance'": 0,
+            "sender.balance": 5294,
+            "sender.balance'": 5294,
+            "status.balance": 0,
+            "status.balance'": 0,
+            "treasury.balance": 0,
+            "treasury.balance'": 0
+          },
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 2]",
+          "is_approximation": false,
+          "is_ensures": true,
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_branch": 2,
+          "or_group": 5,
+          "passed": false
+        }
+      ],
+      "func_name": "validate[branch 3]",
+      "groups": [
+        {
+          "description": "ensures: status.balance != 0 || sender.balance == old(sender.balance)",
+          "location": {
+            "column": 17,
+            "line": 55
+          },
+          "or_group": 0,
+          "passed": true
+        },
+        {
+          "description": "ensures: status.balance != 0 || recipient.balance == old(recipient.balance)",
+          "location": {
+            "column": 17,
+            "line": 56
+          },
+          "or_group": 1,
+          "passed": true
+        },
+        {
+          "description": "ensures: status.balance != 0 || treasury.balance == old(treasury.balance)",
+          "location": {
+            "column": 17,
+            "line": 57
+          },
+          "or_group": 2,
+          "passed": true
+        },
+        {
+          "description": "ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000",
+          "location": {
+            "column": 17,
+            "line": 60
+          },
+          "or_group": 3,
+          "passed": true
+        },
+        {
+          "description": "ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0",
+          "location": {
+            "column": 17,
+            "line": 62
+          },
+          "or_group": 4,
+          "passed": true
+        },
+        {
+          "description": "ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000",
+          "location": {
+            "column": 17,
+            "line": 64
+          },
+          "or_group": 5,
+          "passed": true
+        }
+      ]
+    }
+  ],
+  "passed": true
+}
