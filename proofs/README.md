@@ -12,10 +12,12 @@ negative control. Those defects are in IR lowering, shared by both solvers (Four
 | :--- | :--- | :--- | :--- |
 | `transfer_validator_full.telos` | **PASS** under `--solver z3`, certificate source | Every clause of `validate_transfer` with the exact Floor product: conservation, no overdraft, directionality, no-op denial, both rounding bounds, overflow denial, and the restated denial (AD-5). Needs the fixed disjunction semantics (commit `60d44cf` in tpt-telos). | Nothing in the spec is left unproven here. The ideal layer is the Floor relation, not a separate exact-rational model. |
 | `transfer_validator.telos` | **PASS** (linear clauses only) | Strict conservation; no overdraft; directionality; never-overcharge (`credited·10000 ≤ numer`) — all on both Allow and Deny | Deny is a no-op; upper half of bounded rounding; overflow denial; restated denial clause (AD-5). These are disjunctive and are checked in Rust (`tests/differential.rs`). The Floor formula `numer = amount·bps` is a parameter, not derived. |
-| `composition_two_transfers.telos` | **PASS** (2C.03, partial) | Conservation and non-negativity across two sequential transfer steps, as the net effect, with step 2's solvency on step 1's result | Two steps only. The net-effect form is a deliberate workaround (AD-6): repeated assignments in separate `mutate` blocks are not reliable in this solver version. N-step composition is by induction, not checked. |
+| `composition_two_transfers.telos` | **PASS** (concrete two-step instance for 2C.03) | Conservation and non-negativity across two sequential transfer steps, as the net effect, with step 2's solvency on step 1's result | Two steps only. The net-effect form is a deliberate workaround (AD-6): repeated assignments in separate `mutate` blocks are not reliable in this solver version. N-step composition is the induction in "Composition over N transfers" below, not a telos proof. |
 | `netting_10party.telos` | **PASS** | Conservation under a zero-sum 10-party settlement; non-negativity of parties 0 and 9 (invariants for all ten) | Constraint orthogonality is argued, not proven (below) |
 | `ideal_transfer_validator.telos` | **PASS** under `--solver z3` (ideal layer, 1C.01) | Exact conservation, no overdraft, directionality, Deny is a no-op, with the fee kept exact in scaled integers (balances × 10000, fee = `amount·bps`) | Ideal layer only. Its link to the realization layer is the gap bound in `transfer_validator_full.telos` (below) |
 | `ideal_vesting.telos` | **PASS** under `--solver z3` (ideal layer, 1C.04) | Exact conservation, no overdraft, claim ≤ allocation, claim exactly `elapsed·alloc` (balances scaled by `total`) | Ideal layer only. Gap bound against `vesting_exact.telos` (below) |
+| `policy_tiers_3.telos` | **PASS** under `--solver z3` (2A.04, partial) | For a three-tier schedule `(0, r0), (t1, r1), (t2, r2)` with `0 < t1 < t2`: the selected rate is one of the three, it is the tier the Rust lookup picks at every amount, and it stays in `[0, 10000]` | Exactly three tiers. The generic `FeeTiers::rate_for` is tested in Rust (`tiers.rs`), not proven, because telos has no loops. The constructor rules are a `requires`. |
+| `policy_split.telos` | **PASS** under `--solver z3` (2A.04, partial) | Treasury share plus two recipients: the three parts sum to the fee exactly, each part is non-negative, the treasury's rounding remainder is below 3, and no recipient receives more than the fee | Exactly two recipients. The Floor relation for each share is a `requires` (the specification), not a derivation from the rounding operator. The generic `FeeShares::divide` is tested in Rust (`split.rs`). |
 
 ### Ideal and realization layers (todo 1C, 1D.04)
 
@@ -36,7 +38,9 @@ and each bound is proven in its own file.
 | Control | Mutation | Result |
 | :--- | :--- | :--- |
 | `transfer_validator.telos` with treasury credited `fee + 1` | one-unit error in the credit | FAIL on conservation and on never-overcharge |
-| `transfer_validator_full.telos` with the overflow guard removed | Allow without the treasury cap check | FAIL under Z3. Before the fix in tpt-telos `60d44cf` this passed. The defect was in the verifier's disjunction grouping, not in the solvers. Earlier text:  AD-6, so the disjunctive overflow clause is not proven. |
+| `transfer_validator_full.telos` with the overflow guard removed | Allow without the treasury cap check | FAIL under Z3. Before the fix in tpt-telos `60d44cf` this passed. The defect was in the verifier's disjunction grouping, not in the solvers (see AD-6). |
+| `policy_split_drops_unit.telos` (`proofs/negative/`) | The treasury is credited one unit too few, so a fee unit is destroyed | FAIL under Z3 on the fee-conservation ensures and on the treasury's non-negativity |
+| `policy_tiers_wrong_top_tier.telos` (`proofs/negative/`) | Amounts at or above `t2` get the middle tier | FAIL under Z3 on the top-tier selection ensures, on both branches |
 
 The first control shows the conjunctive proof is not vacuous. The second is why the overflow clause is not claimed.
 
@@ -151,8 +155,12 @@ case must re-open this item.
 
 ## Versions
 
-- `tpt-telos` 0.2.0 (sibling checkout `tpt-telos`, release build of `telos.exe`, commit `23d53eb`).
-- Solver: built-in Fourier–Motzkin (no Z3).
+- `tpt-telos` 0.2.0, sibling checkout `tpt-telos`. Two builds are in use:
+  - **Z3 build, commit `bfa9637`.** This is the pin in `.github/workflows/nightly.yml`, and the one that
+    produces the Z3 verdicts and `certificate.json`. Build it with `--features z3`.
+  - **Fourier–Motzkin build, commit `23d53eb`.** This is the reference record in `bench/REFERENCE_HARDWARE.md`.
+    It has no Z3.
+- Solver: built-in Fourier–Motzkin by default. Z3 only with `--solver z3` on the Z3 build.
 
 ## Nonlinear proofs (monomials, `--solver z3`)
 
