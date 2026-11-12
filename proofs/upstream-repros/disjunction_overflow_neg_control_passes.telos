@@ -2,7 +2,7 @@
 // Copyright (c) 2026 TPT Solutions
 //
 // tpt-statera — linear-arithmetic model of validate_transfer (todo 1C.01, 1C.02, 1C.03,
-// 1D.01, 1D.02, 1D.03). Supersedes the abstract-fee model in transfer_conservation.telos.
+// 1D.01, 1D.02, 1D.03).  Supersedes an earlier abstract-fee model (removed).
 //
 // ENCODING. The Floor fee is `fee = floor(numer / 10000)` with `numer = amount * bps`.
 //   * `numer` is a parameter. The product amount*bps is bilinear and is NOT discharged by
