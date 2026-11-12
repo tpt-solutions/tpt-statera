@@ -1,10 +1,12 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
 # Copyright (c) 2026 TPT Solutions
-# todo 1A.06 (proof runs), 1A.07c (upstream regression smoke tests), 1E.04 (benchmark tracking).
+# todo 1A.06 (proof runs), 1A.07c (upstream regression smoke tests).
 #
-# NOT YET RUNNABLE in CI: tpt-telos is a sibling checkout, not a published release.
-# The job below is the intended shape. It is intentionally not enabled until the
-# tpt-telos source location is decided (todo 1A.07d).
+# STATUS: written, NOT YET RUN on GitHub. It was checked for YAML shape only. The first run should be
+# watched, and the steps adjusted to the runner's real paths.
+#
+# The proofs need Z3 (the full model uses exact monomials). Z3 comes from the official release, and
+# telos is built from the tpt-telos repository with the `z3` feature.
 
 name: nightly
 
@@ -16,26 +18,68 @@ on:
 jobs:
   proofs:
     runs-on: ubuntu-latest
-    if: ${{ false }} # enable once tpt-telos is available (todo 1A.07d)
+    env:
+      Z3_VERSION: "5.4.1"
     steps:
       - uses: actions/checkout@v4
-      # TODO(1A.07d): check out tpt-telos here (repository and ref to be decided by the owner).
+        with:
+          path: tpt-statera
+
+      - uses: actions/checkout@v4
+        with:
+          repository: tpt-solutions/tpt-telos
+          path: tpt-telos
+
       - uses: dtolnay/rust-toolchain@stable
-      - name: Build telos
-        run: cargo build --release -p tpt-telos --manifest-path tpt-telos/Cargo.toml
-      - name: Verify proofs (fail on any FAIL line)
+
+      - name: Install libclang (bindgen needs it to build the Z3 bindings)
+        run: sudo apt-get update && sudo apt-get install -y libclang-dev
+
+      - name: Fetch the official Z3 release
         run: |
           set -e
-          for f in proofs/transfer_conservation.telos proofs/netting_10party.telos; do
-            ./tpt-telos/target/release/telos verify "$f" | tee /dev/stderr | (! grep -q "\[FAIL\]")
-          done
-      - name: Regenerate certificate and require no drift
+          curl -sSL -o z3.zip \
+            "https://github.com/Z3Prover/z3/releases/download/z3-${Z3_VERSION}/z3-${Z3_VERSION}-x64-glibc-2.39.zip"
+          unzip -q z3.zip -d "$HOME/z3"
+          Z3_DIR="$(dirname "$(find "$HOME/z3" -name 'libz3.so' | head -n1)")"
+          echo "Z3_DIR=$Z3_DIR" >> "$GITHUB_ENV"
+          echo "Z3_INCLUDE=$(dirname "$(find "$HOME/z3" -name 'z3.h' | head -n1)")" >> "$GITHUB_ENV"
+
+      - name: Build telos with the z3 feature
+        working-directory: tpt-telos
+        env:
+          Z3_SYS_Z3_HEADER: ${{ env.Z3_INCLUDE }}/z3.h
+          Z3_LIBRARY_PATH_OVERRIDE: ${{ env.Z3_DIR }}
+          LD_LIBRARY_PATH: ${{ env.Z3_DIR }}
+        run: cargo build --release -p tpt-telos --features z3
+
+      - name: Verify every proof under Z3 (fail on any FAIL)
+        working-directory: tpt-statera
+        env:
+          LD_LIBRARY_PATH: ${{ env.Z3_DIR }}
         run: |
-          python3 scripts/generate_certificate.py --telos ./tpt-telos/target/release/telos
+          set -e
+          TELOS=../tpt-telos/target/release/telos
+          for f in proofs/transfer_validator_full.telos proofs/floor_fee_exact.telos \
+                   proofs/vesting_exact.telos proofs/composition_two_transfers.telos \
+                   proofs/netting_10party.telos; do
+            "$TELOS" verify --solver z3 "$f" | tee /dev/stderr | (! grep -q "\[FAIL\]")
+          done
+
+      - name: Regenerate the certificate and require no drift
+        working-directory: tpt-statera
+        env:
+          LD_LIBRARY_PATH: ${{ env.Z3_DIR }}
+        run: |
+          set -e
+          python3 scripts/generate_certificate.py \
+            --telos ../tpt-telos/target/release/telos --solver z3
           git diff --exit-code proofs/certificate.json proofs/transcripts/
 
   benchmark:
+    # Not enabled. It needs a dedicated reference machine (todo 1E.01). On shared runners the
+    # median varies by about 4%, so a regression check on them is noise (bench/compare_bench.py).
     runs-on: ubuntu-latest
-    if: ${{ false }} # blocked on bench harness (todo 1E.02) and frozen hardware (todo 1E.01)
+    if: ${{ false }}
     steps:
-      - run: echo "Benchmark harness not yet implemented (todo 1E.02)."
+      - run: echo "Benchmark job is disabled until a dedicated reference machine exists."
