@@ -26,28 +26,28 @@
 
 ### 1A. Foundation, Licensing & Workspace
 
-- [ ] `1A.01` Initialize repository: `.gitignore`, `README.md` with §1 positioning + prominent status banner ("Phase 1 scope only; §2 guarantees are target architecture until runtime + multi-account composition are verified").
-- [ ] `1A.02` Scaffold Cargo workspace `tpt-statera`: real members `tpt-statera-core`, `tpt-statera-proof`; placeholder stub crates `tpt-statera-policy`, `tpt-statera-runtime` (compile-empty, marked out of scope).
-- [ ] `1A.03` Dual licensing: add full `LICENSE-MIT` and `LICENSE-APACHE` texts; set `license = "MIT OR Apache-2.0"` in every manifest; add `// SPDX-License-Identifier: MIT OR Apache-2.0` headers with **TPT Solutions** copyright to all source files.
-- [ ] `1A.04` Toolchain decisions: Rust edition, MSRV, `rustfmt.toml`, clippy profile (deny warnings in core), `#![deny(unsafe_code)]` in core, documented arithmetic-overflow policy (deny-by-design, never wrap).
-- [ ] `1A.05` Decide `no_std` posture for `tpt-statera-core` (runtime crate will target CosmWasm / Cosmos SDK); record decision + rationale in an architecture note.
+- [x] `1A.01` Initialize repository: `.gitignore`, `README.md` with §1 positioning + prominent status banner ("Phase 1 scope only; §2 guarantees are target architecture until runtime + multi-account composition are verified").
+- [x] `1A.02` Scaffold Cargo workspace `tpt-statera`: real members `tpt-statera-core`, `tpt-statera-proof`; placeholder stub crates `tpt-statera-policy`, `tpt-statera-runtime` (compile-empty, marked out of scope).
+- [x] `1A.03` Dual licensing: add full `LICENSE-MIT` and `LICENSE-APACHE` texts; set `license = "MIT OR Apache-2.0"` in every manifest; add `// SPDX-License-Identifier: MIT OR Apache-2.0` headers with **TPT Solutions** copyright to all source files.
+- [x] `1A.04` Toolchain decisions: Rust edition, MSRV, `rustfmt.toml`, clippy profile (deny warnings in core), `#![deny(unsafe_code)]` in core, documented arithmetic-overflow policy (deny-by-design, never wrap).
+- [x] `1A.05` Decide `no_std` posture for `tpt-statera-core` (runtime crate will target CosmWasm / Cosmos SDK); record decision + rationale in an architecture note.
 - [ ] `1A.06` CI pipeline: fmt check, clippy, unit + property tests, doc build (warnings as errors), coverage; separate nightly job for proof runs + benchmarks.
 - [ ] `1A.07` Dependency governance (TPT ecosystem):
   - [ ] `1A.07a` Pin exact versions of `tpt-math`, `tpt-formal`, `tpt-telos`; commit `Cargo.lock`.
-  - [ ] `1A.07b` Write `SEMVER_CONTRACTS.md`: which upstream APIs/types we compile against and our bump policy.
+  - [x] `1A.07b` Write `SEMVER_CONTRACTS.md`: which upstream APIs/types we compile against and our bump policy.
   - [ ] `1A.07c` Upstream regression smoke tests in CI that fail loudly on behavioral drift (solver answers, math kernels).
-  - [ ] `1A.07d` Decide registry vs. vendored/path fallback strategy for TPT-internal crates.
+  - [x] `1A.07d` Decide registry vs. vendored/path fallback strategy for TPT-internal crates.
 
 ### 1B. `tpt-statera-core` Implementation (spec Appendix A)
 
-- [ ] `1B.01` Types per Appendix A: `TransferProposal { amount, fee_rate_bps }`, `SystemState { sender_balance, recipient_balance, treasury_balance }`, `ValidationOutcome::Allow { .., dust_retained_by_sender } | Deny` — use `dust_retained_by_sender`, **never** `dust_refunded_to_sender` (§6.1 renaming rationale).
-- [ ] `1B.02` Implement `validate_transfer` steps 0–6: fail-closed `fee_rate_bps > 10_000` guard; solvency check; u128 floor fee + captured `dust` excluded from `total_deduction`; u128-computed recipient/treasury sums checked against `u64::MAX` **before** any u64 addition/cast.
-- [ ] `1B.03` Unit-test edge table: zero amount; zero fee; 9999 / 10000 bps; 10001 bps → Deny; sender exactly solvent vs. short by 1 unit; recipient at `u64::MAX`; treasury at `u64::MAX`; dust = 0 and dust > 0 partitions.
-- [ ] `1B.04` Property tests (arbitrary valid inputs): conservation `post_sum == pre_sum` on Allow; directionality (sender decreases only, recipient/treasury increase only); Deny paths never panic or wrap (checked in release mode too).
+- [x] `1B.01` Types per Appendix A: `TransferProposal { amount, fee_rate_bps }`, `SystemState { sender_balance, recipient_balance, treasury_balance }`, `ValidationOutcome::Allow { .., dust_retained_by_sender } | Deny` — use `dust_retained_by_sender`, **never** `dust_refunded_to_sender` (§6.1 renaming rationale).
+- [x] `1B.02` Implement `validate_transfer` steps 0–6: fail-closed `fee_rate_bps > 10_000` guard; solvency check; u128 floor fee + captured `dust` excluded from `total_deduction`; u128-computed recipient/treasury sums checked against `u64::MAX` **before** any u64 addition/cast.
+- [x] `1B.03` Unit-test edge table: zero amount; zero fee; 9999 / 10000 bps; 10001 bps → Deny; sender exactly solvent vs. short by 1 unit; recipient at `u64::MAX`; treasury at `u64::MAX`; dust = 0 and dust > 0 partitions.
+- [x] `1B.04` Property tests (arbitrary valid inputs): conservation `post_sum == pre_sum` on Allow; directionality (sender decreases only, recipient/treasury increase only); Deny paths never panic or wrap (checked in release mode too).
 - [ ] `1B.05` Differential oracle tests vs. `symbolic_evaluate_ideal` reference model: `|realized_fee − ideal_fee| ≤ 1.0` and ideal-Deny ⟹ realized-Deny.
-- [ ] `1B.06` API docs carrying the scope notes verbatim: single-proposal/single-snapshot non-atomicity warning (§8.2); comments marking `fee_rate_bps ≤ 10000` and `sender_balance ≥ amount` as deliberate trust-boundary `requires` clauses so reviewers don't convert them to `ensures` (§6.1 final row).
-- [ ] `1B.07` Demo function #1: **linear vesting calculator** — `claimable ≤ (elapsed/total) × total_allocation`, bounded by fixed-point precision, truncation dust explicitly allocated (feeds EC4).
-- [ ] `1B.08` Demo function #2: **multi-party settlement netting** over N parties — Σ of all party state changes == 0; ship a reusable synthetic 10-party fixture shared with the benchmark harness (feeds EC2 + EC4).
+- [x] `1B.06` API docs carrying the scope notes verbatim: single-proposal/single-snapshot non-atomicity warning (§8.2); comments marking `fee_rate_bps ≤ 10000` and `sender_balance ≥ amount` as deliberate trust-boundary `requires` clauses so reviewers don't convert them to `ensures` (§6.1 final row).
+- [x] `1B.07` Demo function #1: **linear vesting calculator** — `claimable ≤ (elapsed/total) × total_allocation`, bounded by fixed-point precision, truncation dust explicitly allocated (feeds EC4).
+- [x] `1B.08` Demo function #2: **multi-party settlement netting** over N parties — Σ of all party state changes == 0; ship a reusable synthetic 10-party fixture shared with the benchmark harness (feeds EC2 + EC4).
 
 ### 1C. Ideal-Layer Verification (QF_LRA exact rationals, via `tpt-telos`)
 
@@ -56,7 +56,7 @@
 - [ ] `1C.02` Enforce the independent-clause-scope rule: no contract clause references another clause's `let` bindings; overflow clause recomputes `max_possible_fee` inline from inputs only (§6.1 rows 3 & 7).
 - [ ] `1C.03` Edge-case proof sweep: zero-value transfers, u64 min/max bounds, fee extremes (0, 9999, 10000 bps) — confirm covered by the universal proof, not just by tests; archive solver transcripts as evidence artifacts.
 - [ ] `1C.04` Ideal-layer contracts for the vesting calculator (temporal/proportional invariant, §2 tokenomics row).
-- [ ] `1C.05` Ideal-layer contracts for netting: Σ party deltas == 0; explicitly state the constraint-orthogonality assumption and justify its validity for the 10-party fixture.
+- [x] `1C.05` Ideal-layer contracts for netting: Σ party deltas == 0; explicitly state the constraint-orthogonality assumption and justify its validity for the 10-party fixture.
   - **AC (part of EC4):** orthogonality assumption appears in the proof artifact with a written justification.
 
 ### 1D. Realization-Layer Soundness (u64 integers, bounded rounding)
@@ -67,7 +67,7 @@
   - **AC (completes EC1):** ideal (1C) + realization (1D) proofs for `validate_transfer` both pass in CI on every push; failures block merge.
 - [ ] `1D.04` Two-layer soundness demonstrated on **both** extra functions (vesting + netting): paired ideal + realization contracts with per-function ideal→realization gap bounds.
   - **AC (EC4):** both functions verified in both layers; write-up documents the gap bound per function.
-- [ ] `1D.05` Document rounding-mode policy: Phase 1 = **Floor only** (protocol never overcharges); `Ceiling`/`HalfEven` deferred to `tpt-statera-policy` with mandatory dust-destination routing (§5.2, Principle 2).
+- [x] `1D.05` Document rounding-mode policy: Phase 1 = **Floor only** (protocol never overcharges); `Ceiling`/`HalfEven` deferred to `tpt-statera-policy` with mandatory dust-destination routing (§5.2, Principle 2).
 
 ### 1E. FM-Elimination Scalability Benchmark (EC2)
 
@@ -83,12 +83,12 @@
 - [ ] `1F.02` Generate first-draft certificate covering **`validate_transfer` only**.
   - **AC (EC3):** certificate regenerates deterministically in CI; every claim carries a proof ID traceable to a stored solver transcript (1C/1D artifacts).
 - [ ] `1F.03` Embed the §7 caveat verbatim: illustrative artifact; not a compliance claim; excludes concurrent-access and multi-party netting scenarios; must not be presented to customers/auditors as a completed regulatory mapping until Phase 2 + Phase 3.
-- [ ] `1F.04` Stub control-mapping entries for SOC2 CC6.1 and MiCA Article 51, explicitly marked "mapping pending Phase 2".
+- [x] `1F.04` Stub control-mapping entries for SOC2 CC6.1 and MiCA Article 51, explicitly marked "mapping pending Phase 2".
 
 ### 1G. Threat Model & Responsible-Claims Documentation (EC5)
 
-- [ ] `1G.01` Promote spec §8 into standalone `THREAT_MODEL.md` (successor doc): 4 assumptions, serialized-validation caller obligation, trusted-config boundary, no-enforcement-bypass-yet statement.
-- [ ] `1G.02` Claims-guardrail template: approved external wording ensuring "conservation of value" is never cited without its scope (single-call, serialized execution, Phase 1 boundary).
+- [x] `1G.01` Promote spec §8 into standalone `THREAT_MODEL.md` (successor doc): 4 assumptions, serialized-validation caller obligation, trusted-config boundary, no-enforcement-bypass-yet statement.
+- [x] `1G.02` Claims-guardrail template: approved external wording ensuring "conservation of value" is never cited without its scope (single-call, serialized execution, Phase 1 boundary).
 - [ ] `1G.03` Review cycle: internal reviewer(s) + sign-off block (names, roles, dates) recorded in the doc.
   - **AC (EC5):** sign-off recorded; doc version-tagged; linked from `README.md` and referenced by the Proof Certificate.
 
@@ -162,6 +162,23 @@
 
 *End of checklist. Keep IDs stable when adding items — append new ones rather than renumbering.*
 
+---
 
+## Status notes (2026-11-12, Phase 1 pass)
 
+Items left open, and why:
+
+- `1A.06` / `1A.07c` / `1E.04`: `.github/workflows/ci.yml` and `nightly.yml` are written but not run on a remote. The nightly proofs job is disabled until `tpt-telos` checkout is decided (`1A.07d` decision recorded, location not yet set).
+- `1A.07a`: tpt-math and tpt-formal are not used, so there is nothing to pin. `tpt-telos` is recorded at 0.2.0 in `SEMVER_CONTRACTS.md`.
+- `1B.05` / `1D.02`: the spec's `ideal Deny => realized Deny` clause is false under Floor rounding. Counterexample pinned in `tests/differential.rs`. Needs a spec decision (`docs/ARCHITECTURE.md` AD-5).
+- `1C.01` / `1C.02`: only the linear conservation core is proven, with an abstract fee (`proofs/transfer_conservation.telos`). The Floor formula needs `telos --solver z3`, which is not available here.
+- `1C.03`: the edge sweep is in the Rust tests. The solver-side sweep is not done.
+- `1C.04`: vesting contracts not written. Bilinear, same blocker as 1C.01.
+- `1D.01`, `1D.03`, `1D.04`: realization-layer proofs. Same blocker.
+- `1E.01`: `bench/REFERENCE_HARDWARE.md` is a candidate record, not frozen. Owner must confirm the host. `1E.02`/`1E.03` harness and gate not built. `telos verify` process timing is not a valid EC2 measurement.
+- `1F.01`: certificate schema is documented in script comments only. A standalone schema doc is still needed.
+- `1F.02`: certificate generated and deterministic locally (8 claims, all PASS). It covers the abstract linear model, not the full `validate_transfer`. CI determinism check not wired.
+- `1G.03`: sign-off block in `THREAT_MODEL.md` is intentionally blank. Requires named human reviewers.
+- `1H.*`: exit review, release tag and retrospective depend on all of the above.
+- Phases 2–4: not started. They need design decisions (e.g. `2B.01` host target), legal and compliance review (`2C.02`, `4.05`), and an external audit firm (`3.01`–`3.06`), so they are not for an autonomous pass.
 
