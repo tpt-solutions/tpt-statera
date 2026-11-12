@@ -90,6 +90,7 @@ default Fourier-Motzkin solver refuses them, so a default run cannot report a no
 | File | Status | Proves (Z3, all PASS) | Does not prove |
 | :--- | :--- | :--- | :--- |
 | `floor_fee_exact.telos` | **PASS** under `--solver z3` | Conservation; no overdraft; directionality; never-overcharge with the exact product `amount*bps` | Upper half of bounded rounding and overflow denial (disjunctive, lowering defect AD-6). The Floor relation is a requires, i.e. the specification, not a derivation from the rounding operator. |
+| `vesting_schedule.telos` | **PASS** under `--solver z3` | Two claims at times e1 <= e2: the vested amount is monotone, the payments sum to the vested amount at e2, the total is within the allocation, and each vested amount is within its ideal proportion. A negative control (no e2 >= e1) FAILs. |  The Floor relation is a specification. Schedules of more than two claims follow by the same argument, not checked here. |
 | `vesting_exact.telos` | **PASS** under `--solver z3` | Conservation of claimed plus pool; claimed never exceeds the ideal proportion; truncation below one unit; claimed at most the allocation | The vesting schedule as a whole (the claim is one step). Floor is the defining relation, as above. |
 
 Negative controls, each FAIL under Z3 as expected: `floor_fee_exact` with the credit off by one (fails

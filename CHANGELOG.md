@@ -30,7 +30,7 @@ All notable changes. Claims in this file stay inside the spec §7 caveat and `TH
 
 ### Known limitations
 
-- Cross-process service has no authentication or TLS. Do not expose it beyond loopback or a private network.
+- Cross-process service uses a shared token but no TLS. Use it on loopback or a private network only.
 - The CosmWasm adapter has not run on a live chain.
 
 - The solver does not prove disjunctive clauses (upper rounding bound, overflow denial, restated
