@@ -214,8 +214,11 @@ pub enum ValidationOutcome {
 ///    matches!(result, ValidationOutcome::Allow { rounded_fee, .. })) ==>
 ///     abs((rounded_fee as f64) - ideal_fee) <= 1.0 // Rounded fee is at most 1 unit away from ideal
 /// ensures: // CONSERVATIVE DENIAL: NO FALSE ALLOWS (Overdraft prevention)
+///   // Restated (revision history, AD-5): Floor rounding makes the original clause false.
+///   // Ideal Deny implies realized Deny, OR the ideal shortfall is below one unit.
 ///   let ideal = symbolic_evaluate_ideal(state, proposal, ideal_fee_rational); // re-bound: independent clause scope
-///   matches!(ideal, ValidationOutcome::Deny) ==> matches!(result, ValidationOutcome::Deny)
+///   matches!(ideal, ValidationOutcome::Deny) ==>
+///     (matches!(result, ValidationOutcome::Deny) || ideal_shortfall_below_one_unit(state, proposal))
 /// ensures: // CONSERVATIVE DENIAL on additive overflow (no silent wraparound)
 ///   // Corrected from an earlier `requires`-based framing: the function does not
 ///   // leave overflow as caller-avoided undefined behavior, it defensively checks
