@@ -50,6 +50,42 @@ fn obligations() -> Vec<Constraint> {
     out
 }
 
+/// Policy augmentation (todo 2A.05): a fee split among two recipients and the treasury at fixed shares
+/// 3333 / 3333 / 3334 bps (docs/POLICY_MODEL.md D2). With constant shares every constraint is linear, so the
+/// Fourier–Motzkin solver can run it. The floor relation for each share is the premise, and the remainder
+/// bound is the obligation. The netting set is kept, so the augmented set is netting plus the split.
+fn policy_premises() -> Vec<Constraint> {
+    // Shares, in basis points. They sum to 10 000.
+    const SHARES: [(&str, i64); 3] = [("p1", 3333), ("p2", 3333), ("pt", 3334)];
+    let fee = Linear::var("fee");
+    let mut cs = vec![Constraint(fee.clone(), Relation::Ge)];
+    for (name, bps) in SHARES {
+        let p = Linear::var(name);
+        // p * 10000 <= fee * bps          <=>   fee*bps - p*10000 >= 0
+        cs.push(Constraint(fee.scale(bps).sub(&p.scale(10_000)), Relation::Ge));
+        // fee * bps < p * 10000 + 10000   <=>   p*10000 + 9999 - fee*bps >= 0 (integers)
+        cs.push(Constraint(
+            p.scale(10_000).add(&Linear::constant_only(9_999)).sub(&fee.scale(bps)),
+            Relation::Ge,
+        ));
+        // each part is non-negative
+        cs.push(Constraint(p, Relation::Ge));
+    }
+    cs
+}
+
+/// Obligations for the split: the remainder fee - (p1 + p2 + pt) is in [0, 3).
+fn policy_obligations() -> Vec<Constraint> {
+    let rem = Linear::var("fee")
+        .sub(&Linear::var("p1"))
+        .sub(&Linear::var("p2"))
+        .sub(&Linear::var("pt"));
+    vec![
+        Constraint(rem.clone(), Relation::Ge),
+        Constraint(Linear::constant_only(2).sub(&rem), Relation::Ge),
+    ]
+}
+
 fn one_call(prem: &[Constraint], obl: &[Constraint]) -> bool {
     obl.iter().all(|c| entails(prem, c))
 }
@@ -62,8 +98,15 @@ fn percentile(sorted: &[f64], p: f64) -> f64 {
 fn main() {
     let calls: usize = std::env::var("FM_CALLS").ok().and_then(|s| s.parse().ok()).unwrap_or(1000);
     let warmup: usize = 50;
-    let prem = premises();
-    let obl = obligations();
+    // FM_AUGMENT=policy adds the fee split (todo 2A.05). Unset, the benchmark is the netting set as before.
+    let augment = std::env::var("FM_AUGMENT").unwrap_or_default();
+    let mut prem = premises();
+    let mut obl = obligations();
+    if augment == "policy" {
+        prem.extend(policy_premises());
+        obl.extend(policy_obligations());
+    }
+    println!("augment={}", if augment.is_empty() { "none" } else { augment.as_str() });
 
     // Sanity: the obligations must be entailed, otherwise the timings measure a failure.
     assert!(one_call(&prem, &obl), "netting obligations not entailed; benchmark invalid");

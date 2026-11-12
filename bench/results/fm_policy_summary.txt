@@ -1,0 +1,8 @@
+augment=policy
+fm-netting-bench: 10-party settlement, 13 obligations per call
+calls=5000 warmup=50
+median_ms=1.251300
+p99_ms=2.379000
+mean_ms=1.311631
+min_ms=1.079500 max_ms=8.760600
+gate(median<10ms && p99<50ms)=PASS
