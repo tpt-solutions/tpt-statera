@@ -44,3 +44,19 @@ jobs:
       - uses: taiki-e/install-action@cargo-llvm-cov
       - name: Coverage (core)
         run: cargo llvm-cov --package tpt-statera-core --summary-only
+
+  no-std:
+    # AD-2: tpt-statera-core is no_std with zero dependencies. Check it on targets without std.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown, thumbv7m-none-eabi
+      - name: Check core on wasm32 (CosmWasm-style host)
+        run: cargo check -p tpt-statera-core --target wasm32-unknown-unknown
+      - name: Check core on bare-metal ARM (no_std proof)
+        run: cargo check -p tpt-statera-core --target thumbv7m-none-eabi
+      - name: Build CosmWasm contract for wasm32 (release)
+        run: cargo build -p tpt-statera-cosmwasm --target wasm32-unknown-unknown --release
+
