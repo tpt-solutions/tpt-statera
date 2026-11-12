@@ -63,11 +63,15 @@ What the chain adds, and what this argument depends on:
    [CosmWasm transactions architecture](https://cosmwasm.cosmos.network/core/architecture/transactions)
    and [CosmWasm SEMANTICS.md](https://www.github.com/CosmWasm/cosmwasm/blob/main/SEMANTICS.md).
 2. **Atomic rollback.** An error from `execute` reverts the message, so the `Err` on `Deny` writes
-   nothing. The same pages state that the error case rolls back all state changes.
+   nothing. The same pages state that the error case rolls back all state changes. The simulator tests in
+   `crates/tpt-statera-cosmwasm/tests/multitest.rs` check this in `cw-multi-test` 3.0.1: a denied message writes
+   nothing, and a denied message in a multi-message transaction rolls back the valid message before it. This is
+   a simulator check, not a chain check.
 3. **No submessages.** The adapter never dispatches submessages, so the partial-revert exception for
    submessages does not apply.
 
-Status: these three claims were checked against search-result excerpts of those pages, not a full read.
+Status: claims 1 and 3 were checked against search-result excerpts of the CosmWasm pages, not a full read. Claim 2 is
+also checked in the simulator (see above).
 Re-read the pages against the pinned `cosmwasm-std` 3.0.11 before relying on them.
 
 What the chain does not give us, and the adapter does not supply:
