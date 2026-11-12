@@ -15,6 +15,7 @@
 import argparse
 import glob
 import os
+import re
 import subprocess
 import sys
 
@@ -24,10 +25,20 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 TRANSCRIPTS = os.path.join(ROOT, "proofs", "transcripts", "verify")
 
 
+def canonical(out):
+    # telos prints counterexample variables in hash-map order, which changes between runs. Sort them
+    # so the archived transcript is byte-stable. The verdicts are unaffected.
+    def fix(m):
+        items = [p.strip() for p in m.group(1).split(",") if p.strip()]
+        return "counterexample: {" + ", ".join(sorted(items)) + "}"
+
+    return re.sub(r"counterexample: \{(.*)\}", fix, out)
+
+
 def run(telos, solver, path):
     cmd = [telos, "verify", "--solver", solver, path]
     proc = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
-    out = proc.stdout + proc.stderr
+    out = canonical(proc.stdout + proc.stderr)
     # Keep the raw solver output as evidence (todo 1C.03). Overwritten on each run.
     os.makedirs(TRANSCRIPTS, exist_ok=True)
     tag = os.path.splitext(os.path.basename(path))[0]

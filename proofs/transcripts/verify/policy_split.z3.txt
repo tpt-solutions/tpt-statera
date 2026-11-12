@@ -1,0 +1,17 @@
+Verifying C:\Programming\2 WIP\tpt-statera\proofs\policy_split.telos
+
+  function divide:
+    [PASS] ensures ensures: a.balance + b.balance + treasury.balance == fee
+    [PASS] ensures ensures: a.balance >= 0
+    [PASS] ensures ensures: b.balance >= 0
+    [PASS] ensures ensures: treasury.balance >= 0
+    [PASS] ensures ensures: rem >= 0
+    [PASS] ensures ensures: rem < 3
+    [PASS] ensures ensures: a.balance <= fee
+    [PASS] ensures ensures: b.balance <= fee
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: a.balance >= 0
+    [PASS] invariant Account maintained: b.balance >= 0
+    => PASS
+
+RESULT: all constraints satisfied.

@@ -2,7 +2,7 @@ Verifying C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.t
 
   function validate_ideal[branch 0]:
     [FAIL] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
-      counterexample: {sender.balance'=15066, treasury.balance'=7697, recipient.balance=0, ideal_s=7696, big=10000, treasury.balance=0, recipient.balance'=10000, sender.balance=32762, status.balance'=1, status.balance=0, bps=7696, amount=1}
+      counterexample: {amount=1, big=10000, bps=7696, ideal_s=7696, recipient.balance'=10000, recipient.balance=0, sender.balance'=15066, sender.balance=32762, status.balance'=1, status.balance=0, treasury.balance'=7697, treasury.balance=0}
 --> C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.telos:52:17
    |
 52 |         ensures sender.balance + recipient.balance + treasury.balance
@@ -18,7 +18,7 @@ Verifying C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.t
     [PASS] disjunction group 0:
       [PASS] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]
       [FAIL] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]
-        counterexample: {sender.balance=10000, treasury.balance=0, recipient.balance'=10000, treasury.balance'=1, status.balance'=1, amount=1, big=10000, status.balance=0, ideal_s=0, recipient.balance=0, sender.balance'=0, bps=0}
+        counterexample: {amount=1, big=10000, bps=0, ideal_s=0, recipient.balance'=10000, recipient.balance=0, sender.balance'=0, sender.balance=10000, status.balance'=1, status.balance=0, treasury.balance'=1, treasury.balance=0}
 --> C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.telos:61:17
    |
 61 |         ensures status.balance != 0 || sender.balance == old(sender.balance)
@@ -26,7 +26,7 @@ Verifying C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.t
     [PASS] disjunction group 1:
       [PASS] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]
       [FAIL] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]
-        counterexample: {status.balance'=1, recipient.balance=0, amount=2, ideal_s=7390, status.balance=0, bps=3695, treasury.balance=0, sender.balance'=2562, treasury.balance'=7391, sender.balance=29952, recipient.balance'=20000, big=20000}
+        counterexample: {amount=2, big=20000, bps=3695, ideal_s=7390, recipient.balance'=20000, recipient.balance=0, sender.balance'=2562, sender.balance=29952, status.balance'=1, status.balance=0, treasury.balance'=7391, treasury.balance=0}
 --> C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.telos:62:17
    |
 62 |         ensures status.balance != 0 || recipient.balance == old(recipient.balance)
@@ -34,7 +34,7 @@ Verifying C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.t
     [PASS] disjunction group 2:
       [PASS] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]
       [FAIL] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]
-        counterexample: {recipient.balance=0, amount=1, big=10000, treasury.balance'=7697, sender.balance=32762, recipient.balance'=10000, status.balance'=1, treasury.balance=0, ideal_s=7696, bps=7696, status.balance=0, sender.balance'=15066}
+        counterexample: {amount=1, big=10000, bps=7696, ideal_s=7696, recipient.balance'=10000, recipient.balance=0, sender.balance'=15066, sender.balance=32762, status.balance'=1, status.balance=0, treasury.balance'=7697, treasury.balance=0}
 --> C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.telos:63:17
    |
 63 |         ensures status.balance != 0 || treasury.balance == old(treasury.balance)
@@ -53,7 +53,7 @@ Verifying C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.t
     [PASS] invariant Account maintained: status.balance >= 0
     [PASS] disjunction group 0:
       [FAIL] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]
-        counterexample: {status.balance'=0, treasury.balance=0, amount=10235, status.balance=0, recipient.balance'=0, sender.balance'=0, treasury.balance'=0, recipient.balance=0, bps=2045, ideal_s=20930575, big=102350000, sender.balance=0}
+        counterexample: {amount=10235, big=102350000, bps=2045, ideal_s=20930575, recipient.balance'=0, recipient.balance=0, sender.balance'=0, sender.balance=0, status.balance'=0, status.balance=0, treasury.balance'=0, treasury.balance=0}
 --> C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.telos:61:17
    |
 61 |         ensures status.balance != 0 || sender.balance == old(sender.balance)
@@ -61,7 +61,7 @@ Verifying C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.t
       [PASS] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]
     [PASS] disjunction group 1:
       [FAIL] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]
-        counterexample: {status.balance'=0, sender.balance=0, recipient.balance=0, ideal_s=20930575, bps=2045, treasury.balance=0, status.balance=0, treasury.balance'=0, recipient.balance'=0, amount=10235, sender.balance'=0, big=102350000}
+        counterexample: {amount=10235, big=102350000, bps=2045, ideal_s=20930575, recipient.balance'=0, recipient.balance=0, sender.balance'=0, sender.balance=0, status.balance'=0, status.balance=0, treasury.balance'=0, treasury.balance=0}
 --> C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.telos:62:17
    |
 62 |         ensures status.balance != 0 || recipient.balance == old(recipient.balance)
@@ -69,7 +69,7 @@ Verifying C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.t
       [PASS] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]
     [PASS] disjunction group 2:
       [FAIL] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]
-        counterexample: {status.balance=0, recipient.balance=0, sender.balance=0, recipient.balance'=0, treasury.balance=0, treasury.balance'=0, amount=10235, status.balance'=0, sender.balance'=0, ideal_s=20930575, big=102350000, bps=2045}
+        counterexample: {amount=10235, big=102350000, bps=2045, ideal_s=20930575, recipient.balance'=0, recipient.balance=0, sender.balance'=0, sender.balance=0, status.balance'=0, status.balance=0, treasury.balance'=0, treasury.balance=0}
 --> C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_creates_value.telos:63:17
    |
 63 |         ensures status.balance != 0 || treasury.balance == old(treasury.balance)

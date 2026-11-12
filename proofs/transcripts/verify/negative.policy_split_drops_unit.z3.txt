@@ -1,0 +1,34 @@
+Verifying C:\Programming\2 WIP\tpt-statera\proofs\negative\policy_split_drops_unit.telos
+
+  function divide:
+    [FAIL] ensures ensures: a.balance + b.balance + treasury.balance == fee
+      counterexample: {a.balance'=0, a.balance=0, b.balance'=0, b.balance=0, b1=1, b2=1, bt=9998, fee=0, p1=0, p2=0, pt=0, rem=0, treasury.balance'=-1, treasury.balance=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\policy_split_drops_unit.telos:51:17
+   |
+51 |         ensures a.balance + b.balance + treasury.balance == fee
+   |                 ^
+    [PASS] ensures ensures: a.balance >= 0
+    [PASS] ensures ensures: b.balance >= 0
+    [FAIL] ensures ensures: treasury.balance >= 0
+      counterexample: {a.balance'=0, a.balance=0, b.balance'=0, b.balance=0, b1=1, b2=1, bt=9998, fee=0, p1=0, p2=0, pt=0, rem=0, treasury.balance'=-1, treasury.balance=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\policy_split_drops_unit.telos:55:17
+   |
+55 |         ensures treasury.balance >= 0
+   |                 ^
+    [PASS] ensures ensures: rem >= 0
+    [PASS] ensures ensures: rem < 3
+    [PASS] ensures ensures: a.balance <= fee
+    [PASS] ensures ensures: b.balance <= fee
+    [FAIL] invariant Account maintained: treasury.balance >= 0
+      counterexample: {a.balance'=0, a.balance=0, b.balance'=0, b.balance=0, b1=1, b2=1, bt=9998, fee=0, p1=0, p2=0, pt=0, rem=0, treasury.balance'=-1, treasury.balance=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\policy_split_drops_unit.telos:27:9
+   |
+27 |         balance >= 0
+   |         ^
+    [PASS] invariant Account maintained: a.balance >= 0
+    [PASS] invariant Account maintained: b.balance >= 0
+    => FAIL
+
+RESULT: verification failed (see FAIL above).
+
+hint: some failures may be solver limitations (FM solver is incomplete for nonlinear arithmetic); try --solver z3 for exact results

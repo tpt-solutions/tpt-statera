@@ -1,0 +1,69 @@
+// NEGATIVE CONTROL (todo 2A.04, nightly): this file must FAIL. The treasury is credited one unit too few, so a fee unit is destroyed.
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) 2026 TPT Solutions
+//
+// tpt-statera — fee split arithmetic of tpt-statera-policy (todo 2A.04, docs/POLICY_MODEL.md D2).
+//
+// The fee is divided among a treasury (share bt) and two recipients (shares b1, b2) by basis points.
+// Each recipient gets floor(fee * share / 10000). The treasury gets its own floor plus the rounding
+// remainder, so the parts sum to the fee exactly. This is the Rust `FeeShares::divide`.
+//
+// SPECIFICATION (requires): each floor is the exact Floor relation, as in transfer_validator_full.telos:
+//     p * 10000 <= fee * share < p * 10000 + 10000
+// The model proves the conservation and the remainder bound from that specification.
+//
+// PROVED (under --solver z3):
+//   S1 exact conservation: the three parts sum to the fee
+//   S2 every part is non-negative
+//   S3 the rounding remainder is in [0, 3): fewer units than there are recipients
+//   S4 no fee unit is created: each recipient receives at most the fee
+//
+// Verified: `telos verify --solver z3 proofs/policy_split.telos`
+
+@boundary(cpu_bound)
+@state(persistent)
+module PolicySplit {
+    invariant Account {
+        balance >= 0
+    }
+
+    func divide(mut treasury: Account, mut a: Account, mut b: Account,
+                fee: Int, bt: Int, b1: Int, b2: Int,
+                pt: Int, p1: Int, p2: Int, rem: Int)
+        requires fee >= 0
+        requires bt >= 0
+        requires b1 >= 1
+        requires b2 >= 1
+        requires bt + b1 + b2 == 10000
+        // exact floor of each share (the specification of floor)
+        requires p1 * 10000 <= fee * b1
+        requires fee * b1 < p1 * 10000 + 10000
+        requires p2 * 10000 <= fee * b2
+        requires fee * b2 < p2 * 10000 + 10000
+        requires pt * 10000 <= fee * bt
+        requires fee * bt < pt * 10000 + 10000
+        // the remainder is what the floors left over; the treasury takes it
+        requires rem == fee - p1 - p2 - pt
+        requires treasury.balance == 0
+        requires a.balance == 0
+        requires b.balance == 0
+        // S1 exact conservation
+        ensures a.balance + b.balance + treasury.balance == fee
+        // S2 non-negative parts
+        ensures a.balance >= 0
+        ensures b.balance >= 0
+        ensures treasury.balance >= 0
+        // S3 the remainder is below the number of recipients (3 parties receive a floor each)
+        ensures rem >= 0
+        ensures rem < 3
+        // S4 no recipient receives more than the fee
+        ensures a.balance <= fee
+        ensures b.balance <= fee
+    {
+        mutate state {
+            a.balance = p1;
+            b.balance = p2;
+            treasury.balance = pt + rem - 1;
+        }
+    }
+}
