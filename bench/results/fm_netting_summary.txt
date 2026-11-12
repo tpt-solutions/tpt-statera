@@ -1,0 +1,9 @@
+     Running `target\release\fm-netting-bench.exe`
+raw_csv=C:/Programming/2 WIP/tpt-statera/bench/results/fm_netting_raw.csv
+fm-netting-bench: 10-party settlement, 11 obligations per call
+calls=5000 warmup=50
+median_ms=0.518600
+p99_ms=0.876400
+mean_ms=0.529977
+min_ms=0.451500 max_ms=0.966600
+gate(median<10ms && p99<50ms)=PASS
