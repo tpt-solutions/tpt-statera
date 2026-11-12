@@ -56,6 +56,22 @@ single-snapshot proofs.
 - The policy crate keeps `Floor` as the only permitted rounding mode (`docs/ARCHITECTURE.md` AD-4). Its dust is
   retained by the sender, so the protocol never overcharges.
 
+### D6. Fee routing in the ledger: named fee accounts, paid from the treasury (todo 5B.08)
+
+- **Decision (taken on the recommendation, 2026-11-13).** A ledger built with `Ledger::with_policy` uses the
+  policy's tiers for the rate and its shares for the division. The share accounts are named accounts in the
+  ledger. The core validator still credits the whole fee to the treasury. The ledger then pays each share from
+  the treasury, and the treasury keeps its own share and the rounding remainder.
+- **Why this model.** It keeps the proven validator unchanged. Each share is an ordinary account, so the existing
+  balance and conservation checks cover it. The payout is part of the same locked commit, so no other submission
+  can see a half-paid fee.
+- **Rules.** A share account cannot be the treasury, and cannot be listed twice. An absent share account is opened
+  with zero. An existing balance is kept. If a share would overflow its account, the transfer returns
+  `LedgerError::FeeAccountOverflow` and changes nothing.
+- **Not taken.** Routing a fee to a share account without going through the treasury. Fee accounts that a
+  transfer can name as sender or recipient in the same snapshot are allowed, because the locks cover them.
+- **Not yet done.** The CosmWasm adapter does not route fee shares. The host would need its own accounts for them.
+
 ## Proof obligations for the implementation (todo 2A.03 to 2A.05)
 
 These are what the implementation must satisfy. They are not yet checked.

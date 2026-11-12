@@ -94,6 +94,11 @@ impl FeeShares {
         })
     }
 
+    /// The non-treasury recipients, in the order they were given. Used to open their accounts.
+    pub fn others(&self) -> &[Share] {
+        &self.others
+    }
+
     /// Divide `fee`. The parts plus the treasury amount equal `fee` exactly.
     pub fn divide(&self, fee: u64) -> Result<Division, PolicyError> {
         let fee = fee as u128;

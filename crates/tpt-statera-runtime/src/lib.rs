@@ -35,6 +35,7 @@ use std::sync::{Mutex, MutexGuard};
 use tpt_statera_core::{
     validate_transfer_explained, DenyReason, SystemState, TransferProposal, ValidationOutcome,
 };
+use tpt_statera_policy::{FeeShares, FeeTiers, PolicyError};
 
 /// Account identifier.
 pub type AccountId = u64;
@@ -51,6 +52,14 @@ pub enum LedgerError {
     SelfTransfer,
     /// A lock was poisoned by a panicking thread. Treated as fail-closed.
     Poisoned,
+    /// A fee share names the treasury account. Only with a fee policy.
+    FeeAccountIsTreasury,
+    /// A fee share names the same account twice. Only with a fee policy.
+    DuplicateFeeAccount(AccountId),
+    /// A fee account cannot take its share without overflowing `u64`. The transfer is not committed.
+    FeeAccountOverflow(AccountId),
+    /// The fee policy could not divide the fee. Not expected for validated shares.
+    Policy(PolicyError),
 }
 
 impl fmt::Display for LedgerError {
@@ -59,6 +68,14 @@ impl fmt::Display for LedgerError {
             LedgerError::UnknownAccount(id) => write!(f, "unknown account {id}"),
             LedgerError::SelfTransfer => f.write_str("sender and recipient must differ"),
             LedgerError::Poisoned => f.write_str("account lock poisoned; failing closed"),
+            LedgerError::FeeAccountIsTreasury => {
+                f.write_str("a fee share cannot be the treasury account")
+            }
+            LedgerError::DuplicateFeeAccount(id) => write!(f, "fee account {id} is listed twice"),
+            LedgerError::FeeAccountOverflow(id) => {
+                write!(f, "fee account {id} would overflow; transfer not committed")
+            }
+            LedgerError::Policy(e) => write!(f, "fee policy: {e}"),
         }
     }
 }
@@ -82,15 +99,24 @@ struct Account {
     version: u64,
 }
 
+/// Fee policy applied by a ledger built with [`Ledger::with_policy`] (todo 5B.08).
+#[derive(Debug)]
+struct Routing {
+    tiers: FeeTiers,
+    shares: FeeShares,
+}
+
 /// Balances behind per-account locks. Fields are private: the only write path is `submit`.
 #[derive(Debug)]
 pub struct Ledger {
     accounts: BTreeMap<AccountId, Mutex<Account>>,
     fee_rate_bps: u64,
+    routing: Option<Routing>,
 }
 
 impl Ledger {
     /// Create a ledger with the given accounts and a fixed fee rate (trusted config, <= 10 000).
+    /// The whole fee goes to the treasury.
     pub fn new(initial: &[(AccountId, u64)], fee_rate_bps: u64) -> Self {
         let mut accounts = BTreeMap::new();
         for &(id, balance) in initial {
@@ -111,7 +137,45 @@ impl Ledger {
         Self {
             accounts,
             fee_rate_bps,
+            routing: None,
         }
+    }
+
+    /// Create a ledger whose fees follow a policy (todo 5B.08).
+    ///
+    /// * The rate for each transfer is the tier rate for its amount.
+    /// * The fee is validated as usual, and the treasury is first credited the whole fee.
+    /// * Then each non-treasury share is paid from the treasury, inside the same locked commit.
+    ///   The treasury keeps its share and the rounding remainder.
+    ///
+    /// Every share account is opened here with a zero balance if it is not in `initial`. A share
+    /// account cannot be the treasury, and cannot appear twice.
+    pub fn with_policy(
+        initial: &[(AccountId, u64)],
+        tiers: FeeTiers,
+        shares: FeeShares,
+    ) -> Result<Self, LedgerError> {
+        let mut seen = BTreeSet::new();
+        for share in shares.others() {
+            if share.account == TREASURY {
+                return Err(LedgerError::FeeAccountIsTreasury);
+            }
+            if !seen.insert(share.account) {
+                return Err(LedgerError::DuplicateFeeAccount(share.account));
+            }
+        }
+        let mut ledger = Ledger::new(initial, 0);
+        // Open a share account only if the caller did not give it a balance.
+        for share in shares.others() {
+            ledger.accounts.entry(share.account).or_insert_with(|| {
+                Mutex::new(Account {
+                    balance: 0,
+                    version: 0,
+                })
+            });
+        }
+        ledger.routing = Some(Routing { tiers, shares });
+        Ok(ledger)
     }
 
     /// Read one balance under its account lock.
@@ -142,8 +206,12 @@ impl Ledger {
         if sender == recipient {
             return Err(LedgerError::SelfTransfer);
         }
+        // Every account this transfer touches: the parties, the treasury, and any fee accounts.
+        let mut ids: BTreeSet<AccountId> = [sender, recipient, TREASURY].into_iter().collect();
+        if let Some(routing) = &self.routing {
+            ids.extend(routing.shares.others().iter().map(|s| s.account));
+        }
         // Lock in ascending id order. The set dedupes when the treasury is the sender or recipient.
-        let ids: BTreeSet<AccountId> = [sender, recipient, TREASURY].into_iter().collect();
         let mut locks: BTreeMap<AccountId, MutexGuard<'_, Account>> = BTreeMap::new();
         for id in &ids {
             let m = self
@@ -162,39 +230,66 @@ impl Ledger {
             recipient_balance: r.balance,
             treasury_balance: t.balance,
         };
-        let versions = (s.version, r.version, t.version);
+        let versions: BTreeMap<AccountId, u64> =
+            locks.iter().map(|(id, g)| (*id, g.version)).collect();
 
-        let proposal = TransferProposal::new(amount, self.fee_rate_bps);
+        let rate = match &self.routing {
+            Some(routing) => routing.tiers.rate_for(amount),
+            None => self.fee_rate_bps,
+        };
+        let proposal = TransferProposal::new(amount, rate);
         let result = validate_transfer_explained(state, proposal);
 
         // Re-check versions before committing. Under the lock they cannot change, so this
         // guards against a future change that reads outside the lock (2B.03).
-        if (
-            locks[&sender].version,
-            locks[&recipient].version,
-            locks[&TREASURY].version,
-        ) != versions
-        {
+        let now: BTreeMap<AccountId, u64> = locks.iter().map(|(id, g)| (*id, g.version)).collect();
+        if now != versions {
             return Ok(Submission::Stale);
         }
 
-        match result {
-            Ok(outcome) => {
-                if let ValidationOutcome::Allow {
-                    new_sender_balance,
-                    new_recipient_balance,
-                    new_treasury_balance,
-                    ..
-                } = outcome
-                {
-                    commit(&mut locks, sender, new_sender_balance);
-                    commit(&mut locks, recipient, new_recipient_balance);
-                    commit(&mut locks, TREASURY, new_treasury_balance);
+        let outcome = match result {
+            Ok(outcome) => outcome,
+            Err(reason) => return Ok(Submission::Denied(reason)),
+        };
+
+        if let ValidationOutcome::Allow {
+            new_sender_balance,
+            new_recipient_balance,
+            new_treasury_balance,
+            rounded_fee,
+            ..
+        } = outcome
+        {
+            // Balances after the core transfer. Fee shares are paid out of the treasury's credit.
+            let mut next: BTreeMap<AccountId, u64> = BTreeMap::new();
+            next.insert(sender, new_sender_balance);
+            next.insert(recipient, new_recipient_balance);
+            next.insert(TREASURY, new_treasury_balance);
+
+            if let Some(routing) = &self.routing {
+                let division = routing
+                    .shares
+                    .divide(rounded_fee)
+                    .map_err(LedgerError::Policy)?;
+                let mut treasury = new_treasury_balance;
+                for (account, part) in &division.parts {
+                    treasury = treasury
+                        .checked_sub(*part)
+                        .ok_or(LedgerError::Policy(PolicyError::Overflow))?;
+                    let current = next.get(account).copied().unwrap_or(locks[account].balance);
+                    let credited = current
+                        .checked_add(*part)
+                        .ok_or(LedgerError::FeeAccountOverflow(*account))?;
+                    next.insert(*account, credited);
                 }
-                Ok(Submission::Committed(outcome))
+                next.insert(TREASURY, treasury);
             }
-            Err(reason) => Ok(Submission::Denied(reason)),
+
+            for (id, balance) in next {
+                commit(&mut locks, id, balance);
+            }
         }
+        Ok(Submission::Committed(outcome))
     }
 }
 

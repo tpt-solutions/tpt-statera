@@ -468,7 +468,7 @@ Phase 5A verification (local, 2026-11-13): `cargo fmt --check`, `cargo clippy --
 - [x] `5B.06` `validate_with_policy(state, amount, &FeeTiers, &FeeShares)` in the policy crate: tier rate, then the unchanged core validator, then the fee split. A random sweep checks conservation and the split. The `Ledger` part is split out as `5B.08`.
 - [x] `5B.07` README quick-start with a `validate_transfer` snippet and its real output, produced by `crates/tpt-statera-core/examples/quickstart.rs`.
   - Deviation: no top-level `examples/` directory. The workspace root is not a package, so Cargo cannot build examples there. The runtime examples stay in their crate.
-- [ ] `5B.08` Optional policy on `Ledger`, so `submit` uses the tier rate. **Open, owner decision:** the ledger has one treasury account and cannot route a fee split to other accounts. Recommendation: decide the routing model first (for example, named fee accounts in the ledger), then wire it.
+- [x] `5B.08` Optional policy on `Ledger`, so `submit` uses the tier rate and pays the shares. Decided on the recommendation: named fee accounts, paid from the treasury inside the same locked commit (`docs/POLICY_MODEL.md` D6). `Ledger::with_policy`, with tests for the split and remainder, tier selection, the setup rules, an overflow that blocks the whole transfer, and conservation under concurrency. The CosmWasm adapter does not route shares yet (D6).
 
 ### 5C. `statera` CLI and policy config
 

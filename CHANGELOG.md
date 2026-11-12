@@ -17,7 +17,7 @@ All notable changes. Claims in this file stay inside the spec §7 caveat and `TH
   policy types runs the same checks as their constructors, and unknown fields are refused.
 - `tpt-statera-core::prelude`, plus `TransferProposal::new` and `SystemState::new`. Arguments are positional.
 - `tpt-statera-policy::validate_with_policy`: selects the tier rate, runs the unchanged validator, and divides
-  the fee. Not yet wired into `Ledger`: the ledger has one treasury account and cannot route a split.
+  the fee. `Ledger::with_policy` uses the tiers and pays the shares to named fee accounts (POLICY_MODEL D6).
 - `tpt-statera-proof` is now a solver-free verifier for `proofs/certificate.json`, with the schema in
   `docs/certificate.schema.json`. It checks consistency with the inputs, not the proofs.
 - `tpt-statera-cli`: the `statera` command with `validate`, `simulate-fees`, `policy lint` and `cert verify`.

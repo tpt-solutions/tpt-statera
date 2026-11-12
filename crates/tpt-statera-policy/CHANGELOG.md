@@ -22,7 +22,7 @@ All notable changes to `tpt-statera-policy`. The workspace-level history is in
 ### Known limitations
 
 - `Ceiling` and `HalfEven` are rejected by design (AD-4).
-- Tiers and splits are not yet called by `validate_transfer`, the runtime, or the CosmWasm adapter.
+- Tiers and splits are called by the runtime `Ledger::with_policy` (todo 5B.08). They are not called by `validate_transfer` or the CosmWasm adapter.
 - The telos proofs cover a three-tier schedule and a two-recipient split. The generic Rust code for
   any number of tiers or recipients is tested, not proven. Todo 2A.04 stays open for this reason.
 - Rate limits and proportional distribution are not implemented (deferred in `docs/POLICY_MODEL.md`).

@@ -7,6 +7,7 @@ All notable changes to `tpt-statera-runtime`. The workspace-level history is in
 
 ### Added
 
+- `Ledger::with_policy`: tier rates and fee shares paid to named fee accounts from the treasury, in the same locked commit (todo 5B.08, POLICY_MODEL D6).
 - In-process `Ledger` with serialized validate-and-commit per account, versioned snapshots and a
   `Stale` check before commit.
 - Single-writer `WriterService` with a TCP line protocol (`serve_tcp`, `TcpClient`). Requires a shared token.
