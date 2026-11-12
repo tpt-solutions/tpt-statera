@@ -10,7 +10,8 @@ negative control. Those defects are in IR lowering, shared by both solvers (Four
 
 | File | Status | Proves (PASS) | Does not prove |
 | :--- | :--- | :--- | :--- |
-| `transfer_validator.telos` | **PASS**, certificate source | Strict conservation; no overdraft; directionality; never-overcharge (`credited·10000 ≤ numer`) — all on both Allow and Deny | Deny is a no-op; upper half of bounded rounding; overflow denial; restated denial clause (AD-5). These are disjunctive and are checked in Rust (`tests/differential.rs`). The Floor formula `numer = amount·bps` is a parameter, not derived. |
+| `transfer_validator_full.telos` | **PASS** under `--solver z3`, certificate source | Every clause of `validate_transfer` with the exact Floor product: conservation, no overdraft, directionality, no-op denial, both rounding bounds, overflow denial, and the restated denial (AD-5). Needs the fixed disjunction semantics (commit `60d44cf` in tpt-telos). | Nothing in the spec is left unproven here. The ideal layer is the Floor relation, not a separate exact-rational model. |
+| `transfer_validator.telos` | **PASS** (linear clauses only) | Strict conservation; no overdraft; directionality; never-overcharge (`credited·10000 ≤ numer`) — all on both Allow and Deny | Deny is a no-op; upper half of bounded rounding; overflow denial; restated denial clause (AD-5). These are disjunctive and are checked in Rust (`tests/differential.rs`). The Floor formula `numer = amount·bps` is a parameter, not derived. |
 | `transfer_conservation.telos` | **Superseded** by `transfer_validator.telos`. Kept as history | Conservation with an abstract fee and a parametric cap | Fee formula, guards, status |
 | `composition_two_transfers.telos` | **PASS** (2C.03, partial) | Conservation and non-negativity across two sequential transfer steps, as the net effect, with step 2's solvency on step 1's result | Two steps only. The net-effect form is a deliberate workaround (AD-6): repeated assignments in separate `mutate` blocks are not reliable in this solver version. N-step composition is by induction, not checked. |
 | `netting_10party.telos` | **PASS** | Conservation under a zero-sum 10-party settlement; non-negativity of parties 0 and 9 (invariants for all ten) | Constraint orthogonality is argued, not proven (below) |
@@ -20,7 +21,7 @@ negative control. Those defects are in IR lowering, shared by both solvers (Four
 | Control | Mutation | Result |
 | :--- | :--- | :--- |
 | `transfer_validator.telos` with treasury credited `fee + 1` | one-unit error in the credit | FAIL on conservation and on never-overcharge |
-| `transfer_validator.telos` with the overflow guard removed | Allow without the treasury cap check | **PASS (wrong)**. This is the solver defect in AD-6, so the disjunctive overflow clause is not proven. |
+| `transfer_validator_full.telos` with the overflow guard removed | Allow without the treasury cap check | FAIL under Z3. Before the fix in tpt-telos `60d44cf` this passed. The defect was in the verifier's disjunction grouping, not in the solvers. Earlier text:  AD-6, so the disjunctive overflow clause is not proven. |
 
 The first control shows the conjunctive proof is not vacuous. The second is why the overflow clause is not claimed.
 
@@ -35,9 +36,9 @@ python scripts/generate_certificate.py --telos path/to/telos   # writes certific
 ## Certificate
 
 `certificate.json` is the first-draft Proof Certificate (todo 1F.02), generated from
-`transfer_validator.telos`. It has 10 claims (6 ensures, 4 invariants), one per obligation. The
+`transfer_validator_full.telos`, under Z3 (`python scripts/generate_certificate.py --solver z3`). It has 16 claims: 10 obligations (invariants and conjunctive ensures) and 6 disjunctions, one per obligation or group. The
 claims are deduplicated across control-flow paths, and a claim passes only if every path passes.
-Each claim carries a `proof_id` that traces to `transcripts/transfer_validator.json`. The generator
+Each claim carries a `proof_id` that traces to `transcripts/transfer_validator_full.json`. The generator
 is deterministic: two runs give byte-identical output. Control mappings for SOC2 CC6.1 and MiCA
 Article 51 are stubs marked "mapping pending Phase 2" (todo 1F.04). The caveat is the spec §7 text,
 verbatim.
@@ -48,14 +49,11 @@ restated denial clause.
 
 ## Not yet proven (open items)
 
-- **Upper half of bounded rounding** (todo 1D.01): `credited·10000 > numer − 10000` on Allow. This
-  is disjunctive, so it is checked in Rust only.
-- **Overflow denial** (todo 1D.03): disjunctive, Rust-tested only.
-- **Restated denial** (todo 1D.02, AD-5): disjunctive, Rust-tested only.
-- **Floor formula derivation**: `numer = amount·bps` is a parameter. Discharging it needs Z3 or a
-  bilinear-capable solver.
-- **Vesting** (todo 1C.04, 1D.04): `floor(elapsed·alloc / total)` divides by a variable. Blocked
-  without a bilinear-capable solver.
+- **Floor fee as a derivation.** The Floor relation is a specification, not a derivation from the rounding
+  operator. The relation itself, with the exact product, is in `transfer_validator_full.telos`.
+- **Ideal layer as a separate exact-rational model.** Not modelled. The Floor relation stands in for it.
+- **Vesting over time.** Only the claim step is modelled (`vesting_exact.telos`).
+- **Repeated assignment.** Still a telos lowering question. Models here assign each variable once per path.
 
 ## Constraint-orthogonality assumption (todo 1C.05)
 
@@ -111,7 +109,7 @@ The linear proofs above verify the same under `--solver z3` and the default solv
 Upstream repros (`proofs/upstream-repros/`):
 
 - `nonlinear_product_rejected.telos`: rejected by the default solver; verifies under `--solver z3`.
-- `repeated_assignment_neg_control_passes.telos`: a broken model passes under both solvers (should FAIL).
-- `disjunction_overflow_neg_control_passes.telos`: a broken model passes under both solvers (should FAIL).
+- `repeated_assignment_neg_control_passes.telos`: a broken model that passes under both solvers. This is still open: the repeated-assignment handling needs its own investigation (not the disjunction defect).
+- `disjunction_overflow_neg_control_passes.telos`: a broken model that used to pass under both solvers. It now FAILs under both, since the verifier's disjunction fix (`60d44cf`).
 - `tpt-telos-z3-api-0.12.patch`: the port of `z3_solver.rs` to the z3 0.12 API needed to build the feature.
 - `tpt-telos-monomials.patch`: the monomial change set (see above).

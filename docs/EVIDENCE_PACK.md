@@ -8,10 +8,10 @@ written.
 
 | EC | Requirement (spec §9) | Status | Met? |
 | :--- | :--- | :--- | :---: |
-| EC1 | `validate_transfer` passes ideal and realization proofs, including strict conservation and no-false-allows | Conservation and no-overdraft: **proven** (`transfer_validator.telos`). Upper rounding bound, overflow denial, restated denial: **Rust-tested only** (solver unsound on disjunctions) | **Partly** |
+| EC1 | `validate_transfer` passes ideal and realization proofs, including strict conservation and no-false-allows | Under Z3, `transfer_validator_full.telos` proves conservation, no overdraft, the no-op denial, both rounding bounds, overflow denial and the restated denial. The ideal layer is the Floor relation, not a separate exact-rational model | **Partly** (ideal layer not modelled separately) |
 | EC2 | FM benchmark on 10-party netting: median < 10 ms, p99 < 50 ms on reference hardware | Gate **passes** on the frozen reference host, for the netting constraint shape. Not a third-party reproduction. Caveats in `bench/REFERENCE_HARDWARE.md` | **Partly** (hardware not dedicated; shape only) |
-| EC3 | First-draft Proof Certificate, mapped to SOC2/MiCA, labelled illustrative | Certificate generated, deterministic, 10 PASS claims, caveat verbatim. Mappings are stubs | **Partly** (mapping is a stub) |
-| EC4 | Two-layer soundness on ≥2 functions beyond `validate_transfer`; netting proof addresses orthogonality | Netting: proven, orthogonality **argued** in writing (`proofs/README.md`). Vesting: **not proven** (divides by a variable) | **Partly** (one of two functions) |
+| EC3 | First-draft Proof Certificate, mapped to SOC2/MiCA, labelled illustrative | Certificate generated under Z3 from the full model: 16 PASS claims (including the disjunctive ones), deterministic, caveat verbatim. Mappings are stubs | **Partly** (mapping is a stub) |
+| EC4 | Two-layer soundness on ≥2 functions beyond `validate_transfer`; netting proof addresses orthogonality | Netting: proven, orthogonality **argued** in writing (`proofs/README.md`). Vesting: the claim step is proven under Z3 (`vesting_exact.telos`); the full schedule over time is not | **Partly** (claim step only) |
 | EC5 | Threat-model document reviewed and signed off | Document drafted (`THREAT_MODEL.md` 0.2-draft). **Sign-off not recorded** | **No** |
 
 ## Artifacts
@@ -19,11 +19,12 @@ written.
 | Artifact | Path | Evidences |
 | :--- | :--- | :--- |
 | Core implementation and tests (48 tests across the workspace) | `crates/tpt-statera-core`, `crates/tpt-statera-policy`, `crates/tpt-statera-runtime` | EC1 (Rust side), EC4 |
-| Conservation model | `proofs/transfer_validator.telos` | EC1 |
+| Full model (every clause, exact product) | `proofs/transfer_validator_full.telos` | EC1, 1D.01–1D.03 |
+| Conservation model (linear clauses, history) | `proofs/transfer_validator.telos` | EC1 (superseded) |
 | Netting model | `proofs/netting_10party.telos` | EC4 |
 | Composition model | `proofs/composition_two_transfers.telos` | 2C.03 (partial) |
 | Negative controls | described in `proofs/README.md` | Non-vacuity of EC1 and EC4 |
-| Solver transcripts | `proofs/transcripts/transfer_validator.json` | EC3 traceability |
+| Solver transcripts | `proofs/transcripts/transfer_validator_full.json` | EC3 traceability |
 | Certificate | `proofs/certificate.json` | EC3 |
 | Benchmark raw data and summary | `bench/results/fm_netting_raw.csv`, `bench/results/fm_netting_summary.txt` | EC2 |
 | Hardware record | `bench/REFERENCE_HARDWARE.md` | EC2 |

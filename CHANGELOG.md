@@ -18,7 +18,7 @@ All notable changes. Claims in this file stay inside the spec §7 caveat and `TH
   an audit bundle.
 - `proofs/`: `transfer_validator.telos` (conservation, no overdraft, never-overcharge),
   `netting_10party.telos` (conservation), `composition_two_transfers.telos` (two-step net effect).
-- First-draft Proof Certificate (`proofs/certificate.json`, 10 claims, illustrative).
+- First-draft Proof Certificate (`proofs/certificate.json`, 16 claims, illustrative), generated under Z3 from `transfer_validator_full.telos`.
 - Frozen candidate reference hardware and the FM netting benchmark (gate passes on that host).
 - `THREAT_MODEL.md` 0.2-draft, control matrix, evidence pack,
   walkthrough, release checklist, backlog, audit-readiness draft, RFP scope draft.

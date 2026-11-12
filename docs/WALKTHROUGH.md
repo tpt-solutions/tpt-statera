@@ -59,7 +59,7 @@ each batch. The reference application does this and writes the result to its man
 ## 6. Regenerate the evidence
 
 ```sh
-telos verify proofs/transfer_validator.telos
+telos verify --solver z3 proofs/transfer_validator_full.telos
 python scripts/generate_certificate.py --telos path/to/telos
 ```
 

@@ -262,3 +262,20 @@ Still open, and why:
   generator runs the default solver.
 - **Not done:** the telos change has no upstream PR; the z3 0.12 port needs upstreaming too.
 
+---
+
+## Status notes (sixth pass: disjunction fix, full model)
+
+- **Telos disjunction defect fixed** (tpt-telos `60d44cf`). The verifier counted each constraint of a DNF
+  branch as an alternative. A branch is a conjunction, so it now holds only when every check does. The
+  overflow-denial negative control now FAILs under both solvers. Regression tests added. Note: these
+  tests were not run against the old commit, so their failing-before behaviour is reasoned, not observed.
+- **Full model verifies under Z3:** `proofs/transfer_validator_full.telos` proves every clause of
+  `validate_transfer` with the exact Floor product. Its negative controls FAIL.
+- **Certificate** is regenerated under Z3 from the full model: 16 claims, all PASS, deterministic.
+  The generator defaults to `--solver z3`.
+- **Restated denial (1D.02):** proven under Z3 in the full model, in addition to the Rust test.
+- **Still open:** repeated-assignment handling in telos (repro in `proofs/upstream-repros/`). The ideal layer
+  as a separate exact-rational model. Vesting over the full schedule.
+- **Commits:** statera and tpt-telos work was committed to `master` in stages (see `git log`).
+

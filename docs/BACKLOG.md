@@ -5,7 +5,7 @@ so the next cycle can start from the reason, not the title.
 
 | # | Item | Blocker | Spec / todo ref |
 | :-- | :--- | :--- | :--- |
-| 1 | Realization proofs (upper rounding bound, overflow denial, restated denial) by the solver | Needs IR support for the disjunctive clauses. The defect is in IR lowering, shared by both solvers (ARCHITECTURE AD-6) | 1D.01–1D.03 |
+| 1 | Realization proofs (upper rounding bound, overflow denial, restated denial) | Done under `--solver z3` in `proofs/transfer_validator_full.telos` (tpt-telos `60d44cf` fixed the disjunction grouping). Remaining: a separate exact-rational ideal layer, if needed | 1D.01–1D.03 |
 | 2 | Vesting, as an exact model | Done under `--solver z3`: `proofs/vesting_exact.telos` (the claim step). Remaining: a full schedule over time, if needed | 1C.04, 1D.04 |
 | 3 | Nonlinear proofs | Done under `--solver z3` with monomials: `floor_fee_exact.telos`, `vesting_exact.telos`. Default solver still refuses them | AD-6 fourth-pass update |
 | 4 | Dedicated benchmark machine and coupled-solvency benchmark | Hardware not provided | 1E.01, 1E.02 |

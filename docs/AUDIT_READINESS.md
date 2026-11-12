@@ -15,7 +15,7 @@ tagged, so no snapshot exists. Freezing needs the owner's approval (`docs/RELEAS
 ```sh
 cargo test --workspace
 cargo run -p tpt-statera-runtime --example reference_settlement -- out
-telos verify proofs/transfer_validator.telos
+telos verify --solver z3 proofs/transfer_validator_full.telos
 telos verify proofs/composition_two_transfers.telos
 telos verify proofs/netting_10party.telos
 python scripts/generate_certificate.py --telos <path-to-telos>
@@ -23,12 +23,12 @@ cargo run --release --manifest-path bench/fm_netting/Cargo.toml   # requires the
 ```
 
 Expected results: all tests pass; each `telos verify` reports `all constraints satisfied`; the
-certificate reports `overall: PASS` with 10 claims; the benchmark prints its gate line.
+certificate reports `overall: PASS` with 16 claims (generated under `--solver z3`); the benchmark prints its gate line.
 
 ## 3. What the auditor should look at first
 
 1. The restated denial clause (`docs/ARCHITECTURE.md` AD-5) and its differential test.
-2. The solver defects and workarounds (AD-6): disjunctions, repeated assignments.
+2. The telos defects and workarounds (AD-6): the disjunction defect is fixed (tpt-telos `60d44cf`). Repeated assignment is still open.
 3. The overflow and rounding guards in `crates/tpt-statera-core/src/transfer_validator.rs`.
 4. The lock-and-commit path in `crates/tpt-statera-runtime/src/lib.rs`.
 

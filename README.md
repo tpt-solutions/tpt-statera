@@ -41,7 +41,7 @@ cargo doc --workspace --no-deps
 Proofs require a `tpt-telos` build (`cargo build --release -p tpt-telos` in the sibling TPT repo):
 
 ```sh
-telos verify proofs/transfer_validator.telos
+telos verify --solver z3 proofs/transfer_validator_full.telos
 telos verify proofs/composition_two_transfers.telos
 telos verify proofs/netting_10party.telos
 telos verify --solver z3 proofs/floor_fee_exact.telos   # nonlinear: needs the z3 build

@@ -153,13 +153,16 @@ file for the settings and the limits that still apply.
 
 ## Update: approved follow-up work (third pass)
 
-### Correction to AD-6: the defects are in IR lowering, not in the solvers
+### Correction to AD-6: not the solvers, and the disjunction defect is now fixed
 
-AD-6 called the disjunction and repeated-assignment failures "solver" defects. Re-checking with both
-engines shows otherwise. The broken disjunction model passes under Fourier–Motzkin **and** under Z3.
-The repeated-assignment control passes under both as well. So the fault is in how `tpt-telos` lowers
-`ensures` and `mutate` into constraints (`crates/tpt-telos-ir`), which both engines share. Upstream
-repros are in `proofs/upstream-repros/`.
+AD-6 first called the disjunction and repeated-assignment failures "solver" defects. Re-checking with both
+engines showed the solvers were not at fault: the broken disjunction model passed under Fourier–Motzkin and
+under Z3. The disjunction defect was in the verifier's grouping (`crates/tpt-telos-verifier/src/verify.rs`).
+Each DNF branch is a conjunction, but the verifier treated its constraints as alternatives, so `(A && B) || C`
+passed on `A` alone. The fix is tpt-telos commit `60d44cf`. A branch now holds only when all its checks hold,
+and the group holds when one branch does. The overflow-denial control now FAILs under both solvers. Regression
+tests are in `crates/tpt-telos-verifier/tests/disjunction_branches.rs`. The repeated-assignment defect is still
+open; its repro is in `proofs/upstream-repros/`.
 
 ### Z3 (approved, partly done)
 
