@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Copyright (c) 2026 TPT Solutions
+
+[workspace]
+resolver = "2"
+members = [
+    "crates/tpt-statera-core",
+    "crates/tpt-statera-proof",
+    # Placeholder stubs — out of scope for Phase 1 (todo 1A.02).
+    "crates/tpt-statera-policy",
+    "crates/tpt-statera-runtime",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT OR Apache-2.0"
+authors = ["TPT Solutions"]
+
+[workspace.lints.rust]
+unsafe_code = "deny"
+missing_docs = "warn"
+
+[workspace.lints.clippy]
+all = { level = "deny", priority = -1 }
