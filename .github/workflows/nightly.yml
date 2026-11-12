@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Copyright (c) 2026 TPT Solutions
+# todo 1A.06 (proof runs), 1A.07c (upstream regression smoke tests), 1E.04 (benchmark tracking).
+#
+# NOT YET RUNNABLE in CI: tpt-telos is a sibling checkout, not a published release.
+# The job below is the intended shape. It is intentionally not enabled until the
+# tpt-telos source location is decided (todo 1A.07d).
+
+name: nightly
+
+on:
+  schedule:
+    - cron: "0 3 * * *"
+  workflow_dispatch:
+
+jobs:
+  proofs:
+    runs-on: ubuntu-latest
+    if: ${{ false }} # enable once tpt-telos is available (todo 1A.07d)
+    steps:
+      - uses: actions/checkout@v4
+      # TODO(1A.07d): check out tpt-telos here (repository and ref to be decided by the owner).
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build telos
+        run: cargo build --release -p tpt-telos --manifest-path tpt-telos/Cargo.toml
+      - name: Verify proofs (fail on any FAIL line)
+        run: |
+          set -e
+          for f in proofs/transfer_conservation.telos proofs/netting_10party.telos; do
+            ./tpt-telos/target/release/telos verify "$f" | tee /dev/stderr | (! grep -q "\[FAIL\]")
+          done
+      - name: Regenerate certificate and require no drift
+        run: |
+          python3 scripts/generate_certificate.py --telos ./tpt-telos/target/release/telos
+          git diff --exit-code proofs/certificate.json proofs/transcripts/
+
+  benchmark:
+    runs-on: ubuntu-latest
+    if: ${{ false }} # blocked on bench harness (todo 1E.02) and frozen hardware (todo 1E.01)
+    steps:
+      - run: echo "Benchmark harness not yet implemented (todo 1E.02)."
