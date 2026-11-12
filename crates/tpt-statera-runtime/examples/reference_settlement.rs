@@ -114,7 +114,11 @@ fn main() -> std::io::Result<()> {
                     "certificate generation failed (exit {status})"
                 )));
             }
-            writeln!(log, "certificate_source=generated (telos={telos}, solver=z3)").unwrap();
+            writeln!(
+                log,
+                "certificate_source=generated (telos={telos}, solver=z3)"
+            )
+            .unwrap();
         }
         Err(_) => writeln!(log, "certificate_source=committed (TPT_TELOS not set)").unwrap(),
     }
