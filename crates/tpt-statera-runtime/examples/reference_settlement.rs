@@ -95,10 +95,31 @@ fn main() -> std::io::Result<()> {
 
     std::fs::write(out.join("manifest.txt"), &log)?;
 
-    // Copy the committed proof artifacts into the bundle, if present.
     // CARGO_MANIFEST_DIR is crates/tpt-statera-runtime, so the repo root is two levels up.
     let repo = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
     let proofs = repo.join("proofs");
+
+    // Generate the certificate, if a telos binary is given (todo 4.02). This is the same generator CI
+    // uses, so the bundle's certificate comes from the current proofs, not from an old commit.
+    // Without TPT_TELOS the bundle copies whatever is committed, and the verdict below says so.
+    match std::env::var("TPT_TELOS") {
+        Ok(telos) => {
+            let python = std::env::var("TPT_PYTHON").unwrap_or_else(|_| "python".to_string());
+            let status = std::process::Command::new(python)
+                .arg(repo.join("scripts/generate_certificate.py"))
+                .args(["--telos", &telos, "--solver", "z3"])
+                .status()?;
+            if !status.success() {
+                return Err(std::io::Error::other(format!(
+                    "certificate generation failed (exit {status})"
+                )));
+            }
+            writeln!(log, "certificate_source=generated (telos={telos}, solver=z3)").unwrap();
+        }
+        Err(_) => writeln!(log, "certificate_source=committed (TPT_TELOS not set)").unwrap(),
+    }
+
+    // Copy the proof artifacts into the bundle.
     let mut copied = Vec::new();
     for rel in [
         "certificate.json",
