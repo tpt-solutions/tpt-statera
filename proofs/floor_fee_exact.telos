@@ -1,0 +1,66 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) 2026 TPT Solutions
+//
+// tpt-statera — Floor fee with the EXACT product amount*bps (todo 1C.01 / 1D.01, nonlinear).
+//
+// This replaces the `numer` parameter of transfer_validator.telos. There the product was a
+// free input, so the Floor formula was assumed. Here the product `amount * bps` appears
+// directly in the specification. It is lowered to an exact monomial, which needs
+// `telos verify --solver z3`. The Fourier-Motzkin solver refuses it.
+//
+// The Floor specification is the defining relation of floor(amount*bps/10000):
+//     fee*10000 <= amount*bps < fee*10000 + 10000
+//
+// PROVED (conjunctive ensures only, checked with Z3):
+//   E1 strict conservation on every path
+//   E2 no overdraft
+//   E3 directionality
+//   E4 never overcharge (1D.01, lower half):  credited*10000 <= amount*bps
+//
+// NOT PROVED HERE: the upper half of bounded rounding and overflow denial need disjunctive
+// ensures, which the lowering defect (ARCHITECTURE AD-6) makes unreliable. They stay Rust-tested.
+//
+// Verified: `telos verify --solver z3 proofs/floor_fee_exact.telos`
+
+@boundary(cpu_bound)
+@state(persistent)
+module FloorFeeExact {
+    invariant Account {
+        balance >= 0
+    }
+
+    func settle(mut sender: Account, mut recipient: Account, mut treasury: Account,
+                mut status: Account, amount: Int, bps: Int, fee: Int, cap: Int)
+        requires amount >= 0
+        requires bps >= 0
+        requires bps <= 10000
+        requires fee >= 0
+        requires cap >= 0
+        requires fee * 10000 <= amount * bps
+        requires amount * bps < fee * 10000 + 10000
+        requires sender.balance >= 0
+        requires recipient.balance >= 0
+        requires treasury.balance >= 0
+        requires status.balance == 0
+        ensures sender.balance + recipient.balance + treasury.balance
+                == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+        ensures sender.balance >= 0
+        ensures sender.balance <= old(sender.balance)
+        ensures recipient.balance >= old(recipient.balance)
+        ensures treasury.balance >= old(treasury.balance)
+        ensures (treasury.balance - old(treasury.balance)) * 10000 <= amount * bps
+    {
+        if sender.balance >= amount + fee {
+            if recipient.balance + amount <= cap {
+                if treasury.balance + fee <= cap {
+                    mutate state {
+                        sender.balance = old(sender.balance) - amount - fee;
+                        recipient.balance = old(recipient.balance) + amount;
+                        treasury.balance = old(treasury.balance) + fee;
+                        status.balance = 1;
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,53 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) 2026 TPT Solutions
+//
+// tpt-statera — linear vesting claim with exact monomials (todo 1C.04 / 1D.04, EC4).
+//
+// Vesting is elapsed * allocation / total_time. Division by a variable is not a constant
+// division, so the Floor is written as its defining relation, with the claimable amount v:
+//     v * total <= elapsed * alloc < v * total + total
+// Both sides are products of variables, so this needs exact monomials and
+// `telos verify --solver z3`.
+//
+// PROVED (Z3):
+//   V1 conservation: claimed + pool == alloc after the claim
+//   V2 never exceeds the ideal proportion: v * total <= elapsed * alloc
+//   V3 the truncation remainder is below one unit of the schedule: elapsed*alloc < v*total + total
+//   V4 claimed never exceeds the allocation
+//
+// The claimant is credited v only. The fractional remainder stays in the pool, which is V1.
+//
+// Verified: `telos verify --solver z3 proofs/vesting_exact.telos`
+
+@boundary(cpu_bound)
+@state(persistent)
+module VestingExact {
+    invariant Account {
+        balance >= 0
+    }
+
+    func claim(mut claimed: Account, mut pool: Account,
+               alloc: Int, total: Int, elapsed: Int, v: Int)
+        requires alloc >= 0
+        requires total >= 1
+        requires elapsed >= 0
+        requires elapsed <= total
+        requires v >= 0
+        requires v * total <= elapsed * alloc
+        requires elapsed * alloc < v * total + total
+        requires claimed.balance >= 0
+        requires pool.balance >= 0
+        requires claimed.balance + pool.balance == alloc
+        requires v >= claimed.balance
+        ensures claimed.balance + pool.balance == alloc
+        ensures claimed.balance == v
+        ensures claimed.balance * total <= elapsed * alloc
+        ensures elapsed * alloc < claimed.balance * total + total
+        ensures claimed.balance <= alloc
+    {
+        mutate state {
+            claimed.balance = v;
+            pool.balance = alloc - v;
+        }
+    }
+}

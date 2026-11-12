@@ -1,0 +1,60 @@
+diff --git a/crates/tpt-telos-verifier/src/z3_solver.rs b/crates/tpt-telos-verifier/src/z3_solver.rs
+index 3bda446..a082cc1 100644
+--- a/crates/tpt-telos-verifier/src/z3_solver.rs
++++ b/crates/tpt-telos-verifier/src/z3_solver.rs
+@@ -8,11 +8,14 @@
+ //! at runtime.
+ 
+ use tpt_telos_ir::{Constraint, Relation};
+-use z3::{ast::Int, Config, Context, SatResult, Solver};
++use z3::ast::{Ast, Int};
++use z3::{Config, Context, SatResult, Solver};
+ 
+ /// Check if Z3 is available at runtime by attempting to create a context.
+ pub fn is_z3_available() -> bool {
+-    Config::new().try_into().is_ok()
++    // z3 0.12: Context::new is infallible once Z3 is linked; constructing one is the probe.
++    let _ctx = Context::new(&Config::new());
++    true
+ }
+ 
+ /// Convert a tpt-telos constraint into a Z3 integer AST.
+@@ -21,7 +24,7 @@ fn constraint_to_z3<'a>(ctx: &'a Context, c: &Constraint) -> Int<'a> {
+     let mut expr = Int::from_i64(ctx, lin.constant);
+     for (var, coeff) in &lin.terms {
+         let var_ast = Int::new_const(ctx, var.as_str());
+-        expr = &expr + &var_ast * coeff;
++        expr = &expr + &(&var_ast * &Int::from_i64(ctx, *coeff));
+     }
+     expr
+ }
+@@ -36,10 +39,10 @@ pub fn z3_unsat(cs: &[Constraint]) -> bool {
+         let ast = constraint_to_z3(&ctx, c);
+         let zero = Int::from_i64(&ctx, 0);
+         match c.1 {
+-            Relation::Le => solver.assert(&ast <= zero),
+-            Relation::Lt => solver.assert(&ast < zero),
+-            Relation::Ge => solver.assert(&ast >= zero),
+-            Relation::Gt => solver.assert(&ast > zero),
++            Relation::Le => solver.assert(&ast.le(&zero)),
++            Relation::Lt => solver.assert(&ast.lt(&zero)),
++            Relation::Ge => solver.assert(&ast.ge(&zero)),
++            Relation::Gt => solver.assert(&ast.gt(&zero)),
+             Relation::Eq => solver.assert(&ast._eq(&zero)),
+             Relation::Ne => solver.assert(&ast._eq(&zero).not()),
+         }
+@@ -68,10 +71,10 @@ pub fn z3_model(cs: &[Constraint]) -> Option<std::collections::HashMap<String, i
+         let ast = constraint_to_z3(&ctx, c);
+         let zero = Int::from_i64(&ctx, 0);
+         match c.1 {
+-            Relation::Le => solver.assert(&ast <= zero),
+-            Relation::Lt => solver.assert(&ast < zero),
+-            Relation::Ge => solver.assert(&ast >= zero),
+-            Relation::Gt => solver.assert(&ast > zero),
++            Relation::Le => solver.assert(&ast.le(&zero)),
++            Relation::Lt => solver.assert(&ast.lt(&zero)),
++            Relation::Ge => solver.assert(&ast.ge(&zero)),
++            Relation::Gt => solver.assert(&ast.gt(&zero)),
+             Relation::Eq => solver.assert(&ast._eq(&zero)),
+             Relation::Ne => solver.assert(&ast._eq(&zero).not()),
+         }

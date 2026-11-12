@@ -1,0 +1,19 @@
+@boundary(cpu_bound)
+@state(persistent)
+module Nonlinear {
+    invariant Account {
+        balance >= 0
+    }
+
+    func scale(mut acc: Account, amount: Int, bps: Int)
+        requires amount >= 0
+        requires bps >= 0
+        requires bps <= 10000
+        requires acc.balance >= amount * bps
+        ensures acc.balance >= 0
+    {
+        mutate state {
+            acc.balance = old(acc.balance) - amount * bps;
+        }
+    }
+}

@@ -3,8 +3,8 @@
 Machine-checked models of the Phase 1 arithmetic, written in the `tpt-telos` language
 (`requires` / `ensures` / `mutate state`), checked by the built-in Fourier–Motzkin solver.
 
-**Read `docs/ARCHITECTURE.md` AD-6 first.** It explains the encoding choices and a solver defect
-found by negative control. Disjunctive `ensures` clauses are **not** trusted from this telos version.
+**Read `docs/ARCHITECTURE.md` AD-6 first.** It explains the encoding choices and the defects found by
+negative control. Those defects are in IR lowering, shared by both solvers (Fourier–Motzkin and Z3). Disjunctive `ensures` clauses are **not** trusted from this telos version.
 
 ## Index
 
@@ -84,3 +84,34 @@ case must re-open this item.
 
 - `tpt-telos` 0.2.0 (sibling checkout `tpt-telos`, release build of `telos.exe`, commit `23d53eb`).
 - Solver: built-in Fourier–Motzkin (no Z3).
+
+## Nonlinear proofs (monomials, `--solver z3`)
+
+Products of two variables are now supported. They are exact under `telos verify --solver z3`, and the
+default Fourier-Motzkin solver refuses them, so a default run cannot report a nonlinear proof as passed.
+
+| File | Status | Proves (Z3, all PASS) | Does not prove |
+| :--- | :--- | :--- | :--- |
+| `floor_fee_exact.telos` | **PASS** under `--solver z3` | Conservation; no overdraft; directionality; never-overcharge with the exact product `amount*bps` | Upper half of bounded rounding and overflow denial (disjunctive, lowering defect AD-6). The Floor relation is a requires, i.e. the specification, not a derivation from the rounding operator. |
+| `vesting_exact.telos` | **PASS** under `--solver z3` | Conservation of claimed plus pool; claimed never exceeds the ideal proportion; truncation below one unit; claimed at most the allocation | The vesting schedule as a whole (the claim is one step). Floor is the defining relation, as above. |
+
+Negative controls, each FAIL under Z3 as expected: `floor_fee_exact` with the credit off by one (fails
+conservation and never-overcharge); `vesting_exact` with the claim off by one (fails four clauses).
+
+Upstream repro of the earlier rejection, now fixed for `--solver z3`: `upstream-repros/nonlinear_product_rejected.telos`.
+Its default-solver run still reports `non-linear multiplication is not supported`, by design.
+
+The telos change set is saved as `upstream-repros/tpt-telos-monomials.patch`. It covers the IR monomial term,
+the exact-mode switch, the Z3 encoding and the Fourier-Motzkin refusal, plus the z3 0.12 API port.
+
+## Z3 backend
+
+The linear proofs above verify the same under `--solver z3` and the default solver.
+
+Upstream repros (`proofs/upstream-repros/`):
+
+- `nonlinear_product_rejected.telos`: rejected by the default solver; verifies under `--solver z3`.
+- `repeated_assignment_neg_control_passes.telos`: a broken model passes under both solvers (should FAIL).
+- `disjunction_overflow_neg_control_passes.telos`: a broken model passes under both solvers (should FAIL).
+- `tpt-telos-z3-api-0.12.patch`: the port of `z3_solver.rs` to the z3 0.12 API needed to build the feature.
+- `tpt-telos-monomials.patch`: the monomial change set (see above).
