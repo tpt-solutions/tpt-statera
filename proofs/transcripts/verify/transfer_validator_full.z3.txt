@@ -1,0 +1,275 @@
+Verifying C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos
+
+  function validate[branch 0]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    [PASS] disjunction group 0:
+      [PASS] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]
+      [FAIL] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]
+        counterexample: {bps=0, treasury.balance'=0, sender.balance=1, cap=1, fee=0, treasury.balance=0, recipient.balance'=1, recipient.balance=0, status.balance=0, sender.balance'=0, amount=1, status.balance'=1}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:55:17
+   |
+55 |         ensures status.balance != 0 || sender.balance == old(sender.balance)
+   |                 ^
+    [PASS] disjunction group 1:
+      [PASS] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]
+      [FAIL] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]
+        counterexample: {recipient.balance'=1, treasury.balance'=0, status.balance'=1, treasury.balance=0, cap=1, status.balance=0, sender.balance'=0, sender.balance=1, amount=1, recipient.balance=0, bps=0, fee=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:56:17
+   |
+56 |         ensures status.balance != 0 || recipient.balance == old(recipient.balance)
+   |                 ^
+    [PASS] disjunction group 2:
+      [PASS] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]
+      [FAIL] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]
+        counterexample: {amount=3, treasury.balance=0, recipient.balance'=3, status.balance'=1, sender.balance'=1, treasury.balance'=2, fee=2, bps=6667, cap=4, recipient.balance=0, status.balance=0, sender.balance=6}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:57:17
+   |
+57 |         ensures status.balance != 0 || treasury.balance == old(treasury.balance)
+   |                 ^
+    [PASS] disjunction group 3:
+      [FAIL] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 0]
+        counterexample: {sender.balance=0, cap=0, bps=0, amount=0, treasury.balance=0, status.balance=0, recipient.balance'=0, fee=0, sender.balance'=0, recipient.balance=0, treasury.balance'=0, status.balance'=1}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:60:17
+   |
+60 |         ensures status.balance == 0 || amount * bps < (treasury.balance - old(treasury.balance)) * 10000 + 10000
+   |                 ^
+      [PASS] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 1]
+    [PASS] disjunction group 4:
+      [PASS] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+      [PASS] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+      [FAIL] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 1]
+        counterexample: {amount=0, recipient.balance=0, fee=0, sender.balance'=0, treasury.balance'=0, status.balance'=1, status.balance=0, bps=0, recipient.balance'=0, cap=0, treasury.balance=0, sender.balance=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:62:17
+   |
+62 |         ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+   |                 ^
+    [PASS] disjunction group 5:
+      [FAIL] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 0]
+        counterexample: {recipient.balance=0, treasury.balance=0, sender.balance'=0, recipient.balance'=1, treasury.balance'=0, cap=1, sender.balance=1, status.balance'=1, amount=1, bps=1, fee=0, status.balance=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:64:17
+   |
+64 |         ensures old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0
+   |                 ^
+      [FAIL] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 1]
+        counterexample: {cap=0, status.balance'=1, bps=0, recipient.balance'=0, status.balance=0, treasury.balance=0, fee=0, sender.balance=0, sender.balance'=0, treasury.balance'=0, amount=0, recipient.balance=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:64:17
+   |
+64 |         ensures old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0
+   |                 ^
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 2]
+    => PASS
+
+  function validate[branch 1]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    [PASS] disjunction group 0:
+      [FAIL] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]
+        counterexample: {bps=5056, amount=3734, status.balance=0, recipient.balance'=12588, sender.balance'=28161, fee=1887, sender.balance=28161, treasury.balance'=32545, status.balance'=0, cap=32765, recipient.balance=12588, treasury.balance=32545}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:55:17
+   |
+55 |         ensures status.balance != 0 || sender.balance == old(sender.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]
+    [PASS] disjunction group 1:
+      [FAIL] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]
+        counterexample: {sender.balance=28161, status.balance=0, sender.balance'=28161, recipient.balance=12588, recipient.balance'=12588, status.balance'=0, amount=3734, fee=1887, bps=5056, cap=32765, treasury.balance=32545, treasury.balance'=32545}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:56:17
+   |
+56 |         ensures status.balance != 0 || recipient.balance == old(recipient.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]
+    [PASS] disjunction group 2:
+      [FAIL] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]
+        counterexample: {bps=5056, treasury.balance=32545, cap=32765, fee=1887, status.balance=0, treasury.balance'=32545, sender.balance'=28161, recipient.balance=12588, status.balance'=0, recipient.balance'=12588, sender.balance=28161, amount=3734}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:57:17
+   |
+57 |         ensures status.balance != 0 || treasury.balance == old(treasury.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]
+    [PASS] disjunction group 3:
+      [PASS] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 0]
+      [FAIL] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 1]
+        counterexample: {fee=15803, cap=24980, sender.balance'=32738, recipient.balance'=4409, status.balance'=0, bps=9895, sender.balance=32738, recipient.balance=4409, status.balance=0, amount=15971, treasury.balance'=17415, treasury.balance=17415}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:60:17
+   |
+60 |         ensures status.balance == 0 || amount * bps < (treasury.balance - old(treasury.balance)) * 10000 + 10000
+   |                 ^
+    [PASS] disjunction group 4:
+      [PASS] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+      [FAIL] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+        counterexample: {treasury.balance=32545, recipient.balance'=12588, treasury.balance'=32545, fee=1887, recipient.balance=12588, cap=32765, status.balance=0, sender.balance'=28161, bps=5056, status.balance'=0, sender.balance=28161, amount=3734}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:62:17
+   |
+62 |         ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+   |                 ^
+      [PASS] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 1]
+    [PASS] disjunction group 5:
+      [FAIL] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 0]
+        counterexample: {amount=1, recipient.balance=0, bps=1, status.balance=0, sender.balance'=1, sender.balance=1, treasury.balance'=2, fee=0, treasury.balance=2, status.balance'=0, recipient.balance'=0, cap=1}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:64:17
+   |
+64 |         ensures old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0
+   |                 ^
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 1]
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 2]
+    => PASS
+
+  function validate[branch 2]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    [PASS] disjunction group 0:
+      [FAIL] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]
+        counterexample: {amount=16395, sender.balance=32757, recipient.balance=13607, treasury.balance=0, status.balance=0, treasury.balance'=0, bps=9974, sender.balance'=32757, cap=2766, recipient.balance'=13607, status.balance'=0, fee=16352}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:55:17
+   |
+55 |         ensures status.balance != 0 || sender.balance == old(sender.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]
+    [PASS] disjunction group 1:
+      [FAIL] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]
+        counterexample: {treasury.balance'=0, status.balance'=0, treasury.balance=0, status.balance=0, sender.balance=32757, cap=2766, fee=16352, recipient.balance=13607, sender.balance'=32757, bps=9974, amount=16395, recipient.balance'=13607}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:56:17
+   |
+56 |         ensures status.balance != 0 || recipient.balance == old(recipient.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]
+    [PASS] disjunction group 2:
+      [FAIL] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]
+        counterexample: {fee=16352, treasury.balance=0, status.balance=0, treasury.balance'=0, amount=16395, sender.balance'=32757, cap=2766, bps=9974, sender.balance=32757, status.balance'=0, recipient.balance=13607, recipient.balance'=13607}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:57:17
+   |
+57 |         ensures status.balance != 0 || treasury.balance == old(treasury.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]
+    [PASS] disjunction group 3:
+      [PASS] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 0]
+      [FAIL] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 1]
+        counterexample: {amount=2067, bps=1315, recipient.balance'=7166, treasury.balance'=0, sender.balance=30430, status.balance=0, recipient.balance=7166, cap=7151, treasury.balance=0, status.balance'=0, fee=271, sender.balance'=30430}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:60:17
+   |
+60 |         ensures status.balance == 0 || amount * bps < (treasury.balance - old(treasury.balance)) * 10000 + 10000
+   |                 ^
+    [PASS] disjunction group 4:
+      [FAIL] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+        counterexample: {fee=16352, recipient.balance'=13607, treasury.balance'=0, bps=9974, recipient.balance=13607, sender.balance=32757, status.balance'=0, treasury.balance=0, status.balance=0, amount=16395, cap=2766, sender.balance'=32757}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:62:17
+   |
+62 |         ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+   |                 ^
+      [FAIL] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+        counterexample: {treasury.balance'=22943, amount=16383, treasury.balance=22943, bps=8248, sender.balance'=31545, status.balance'=0, sender.balance=31545, status.balance=0, recipient.balance=18946, cap=17093, recipient.balance'=18946, fee=13512}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:62:17
+   |
+62 |         ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+   |                 ^
+      [PASS] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 1]
+    [PASS] disjunction group 5:
+      [FAIL] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 0]
+        counterexample: {recipient.balance'=1, fee=0, bps=9999, amount=1, status.balance'=0, cap=0, sender.balance=1, recipient.balance=1, status.balance=0, sender.balance'=1, treasury.balance'=0, treasury.balance=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:64:17
+   |
+64 |         ensures old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0
+   |                 ^
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 1]
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 2]
+    => PASS
+
+  function validate[branch 3]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    [PASS] disjunction group 0:
+      [FAIL] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]
+        counterexample: {bps=0, fee=0, cap=0, sender.balance=0, treasury.balance'=0, amount=1, recipient.balance=0, treasury.balance=0, sender.balance'=0, status.balance=0, recipient.balance'=0, status.balance'=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:55:17
+   |
+55 |         ensures status.balance != 0 || sender.balance == old(sender.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]
+    [PASS] disjunction group 1:
+      [FAIL] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]
+        counterexample: {status.balance'=0, status.balance=0, treasury.balance'=0, amount=1, recipient.balance=0, sender.balance'=0, bps=0, fee=0, cap=0, sender.balance=0, treasury.balance=0, recipient.balance'=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:56:17
+   |
+56 |         ensures status.balance != 0 || recipient.balance == old(recipient.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]
+    [PASS] disjunction group 2:
+      [FAIL] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]
+        counterexample: {sender.balance'=0, recipient.balance'=0, treasury.balance'=0, treasury.balance=0, cap=0, amount=1, recipient.balance=0, sender.balance=0, status.balance=0, fee=0, status.balance'=0, bps=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:57:17
+   |
+57 |         ensures status.balance != 0 || treasury.balance == old(treasury.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]
+    [PASS] disjunction group 3:
+      [PASS] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 0]
+      [FAIL] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 1]
+        counterexample: {recipient.balance'=0, bps=9815, treasury.balance'=0, amount=11513, cap=0, treasury.balance=0, sender.balance=16386, fee=11300, recipient.balance=0, status.balance'=0, sender.balance'=16386, status.balance=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:60:17
+   |
+60 |         ensures status.balance == 0 || amount * bps < (treasury.balance - old(treasury.balance)) * 10000 + 10000
+   |                 ^
+    [PASS] disjunction group 4:
+      [FAIL] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+        counterexample: {status.balance=0, treasury.balance=0, cap=32764, bps=1139, recipient.balance'=2097, fee=3493, recipient.balance=2097, sender.balance'=9222, status.balance'=0, sender.balance=9222, treasury.balance'=0, amount=30673}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:62:17
+   |
+62 |         ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+   |                 ^
+      [FAIL] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+        counterexample: {treasury.balance=24699, recipient.balance=0, status.balance'=0, recipient.balance'=0, sender.balance'=102, status.balance=0, fee=32715, treasury.balance'=24699, bps=9999, sender.balance=102, amount=32719, cap=8122}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:62:17
+   |
+62 |         ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+   |                 ^
+      [PASS] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 1]
+    [PASS] disjunction group 5:
+      [FAIL] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 0]
+        counterexample: {amount=11834, bps=9207, recipient.balance=0, treasury.balance'=0, sender.balance'=4062, sender.balance=4062, status.balance'=0, cap=0, fee=10895, recipient.balance'=0, treasury.balance=0, status.balance=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:64:17
+   |
+64 |         ensures old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0
+   |                 ^
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 1]
+      [FAIL] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 2]
+        counterexample: {recipient.balance'=0, treasury.balance'=0, sender.balance=5294, sender.balance'=5294, amount=32767, fee=20980, cap=0, treasury.balance=0, recipient.balance=0, status.balance=0, status.balance'=0, bps=6403}
+--> C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator_full.telos:64:17
+   |
+64 |         ensures old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0
+   |                 ^
+    => PASS
+
+RESULT: all constraints satisfied.

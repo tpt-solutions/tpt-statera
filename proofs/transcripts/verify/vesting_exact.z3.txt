@@ -1,0 +1,13 @@
+Verifying C:\Programming\2 WIP\tpt-statera\proofs\vesting_exact.telos
+
+  function claim:
+    [PASS] ensures ensures: claimed.balance + pool.balance == alloc
+    [PASS] ensures ensures: claimed.balance == v
+    [PASS] ensures ensures: claimed.balance * total <= elapsed * alloc
+    [PASS] ensures ensures: elapsed * alloc < claimed.balance * total + total
+    [PASS] ensures ensures: claimed.balance <= alloc
+    [PASS] invariant Account maintained: claimed.balance >= 0
+    [PASS] invariant Account maintained: pool.balance >= 0
+    => PASS
+
+RESULT: all constraints satisfied.

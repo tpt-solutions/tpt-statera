@@ -1,0 +1,252 @@
+Verifying C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos
+
+  function validate[branch 0]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    [PASS] disjunction group 0:
+      [PASS] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]
+      [FAIL] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]
+        counterexample: {cap=1, treasury.balance=0, status.balance=0, sender.balance'=0, recipient.balance'=1, status.balance'=1, sender.balance=1, fee=0, bps=0, recipient.balance=0, amount=1, treasury.balance'=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:56:17
+   |
+56 |         ensures status.balance != 0 || sender.balance == old(sender.balance)
+   |                 ^
+    [PASS] disjunction group 1:
+      [PASS] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]
+      [FAIL] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]
+        counterexample: {sender.balance'=0, status.balance'=1, fee=0, treasury.balance'=0, recipient.balance=0, treasury.balance=0, recipient.balance'=1, sender.balance=1, bps=0, cap=1, status.balance=0, amount=1}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:57:17
+   |
+57 |         ensures status.balance != 0 || recipient.balance == old(recipient.balance)
+   |                 ^
+    [PASS] disjunction group 2:
+      [PASS] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]
+      [FAIL] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]
+        counterexample: {amount=1, fee=1, bps=10000, cap=1, sender.balance=2, recipient.balance=0, treasury.balance=0, status.balance=0, status.balance'=1, sender.balance'=0, recipient.balance'=1, treasury.balance'=1}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:58:17
+   |
+58 |         ensures status.balance != 0 || treasury.balance == old(treasury.balance)
+   |                 ^
+    [PASS] disjunction group 3:
+      [FAIL] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 0]
+        counterexample: {fee=0, sender.balance'=0, treasury.balance=0, bps=0, status.balance=0, amount=0, treasury.balance'=0, sender.balance=0, recipient.balance'=0, cap=0, recipient.balance=0, status.balance'=1}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:61:17
+   |
+61 |         ensures status.balance == 0 || amount * bps < (treasury.balance - old(treasury.balance)) * 10000 + 10000
+   |                 ^
+      [PASS] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 1]
+    [FAIL] disjunction group 4:
+      [PASS] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+      [FAIL] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+        counterexample: {recipient.balance=288, treasury.balance=18048, amount=16064, status.balance'=1, treasury.balance'=32767, bps=9163, fee=14719, cap=24574, recipient.balance'=16352, sender.balance'=1664, status.balance=0, sender.balance=32447}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:63:17
+   |
+63 |         ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+   |                 ^
+      [FAIL] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 1]
+        counterexample: {sender.balance'=0, treasury.balance'=0, treasury.balance=0, recipient.balance=0, amount=0, fee=0, cap=0, sender.balance=0, status.balance'=1, bps=0, recipient.balance'=0, status.balance=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:63:17
+   |
+63 |         ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+   |                 ^
+    [PASS] disjunction group 5:
+      [FAIL] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 0]
+        counterexample: {recipient.balance=0, recipient.balance'=1, treasury.balance'=0, bps=1, status.balance'=1, amount=1, cap=1, treasury.balance=0, fee=0, sender.balance=1, status.balance=0, sender.balance'=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:65:17
+   |
+65 |         ensures old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0
+   |                 ^
+      [FAIL] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 1]
+        counterexample: {treasury.balance'=0, status.balance'=1, cap=0, recipient.balance=0, sender.balance'=0, bps=0, amount=0, fee=0, sender.balance=0, recipient.balance'=0, status.balance=0, treasury.balance=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:65:17
+   |
+65 |         ensures old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0
+   |                 ^
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 2]
+    => FAIL
+
+  function validate[branch 1]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    [PASS] disjunction group 0:
+      [PASS] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]
+      [PASS] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]
+    [PASS] disjunction group 1:
+      [PASS] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]
+      [PASS] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]
+    [PASS] disjunction group 2:
+      [PASS] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]
+      [PASS] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]
+    [PASS] disjunction group 3:
+      [PASS] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 0]
+      [PASS] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 1]
+    [PASS] disjunction group 4:
+      [PASS] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+      [PASS] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+      [PASS] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 1]
+    [PASS] disjunction group 5:
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 0]
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 1]
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 2]
+    => PASS
+
+  function validate[branch 2]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    [PASS] disjunction group 0:
+      [FAIL] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]
+        counterexample: {treasury.balance'=0, status.balance'=0, sender.balance'=32757, fee=16352, recipient.balance=13607, sender.balance=32757, recipient.balance'=13607, amount=16395, status.balance=0, cap=2766, treasury.balance=0, bps=9974}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:56:17
+   |
+56 |         ensures status.balance != 0 || sender.balance == old(sender.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]
+    [PASS] disjunction group 1:
+      [FAIL] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]
+        counterexample: {treasury.balance'=0, recipient.balance'=13607, status.balance'=0, amount=16395, status.balance=0, sender.balance=32757, cap=2766, sender.balance'=32757, bps=9974, treasury.balance=0, fee=16352, recipient.balance=13607}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:57:17
+   |
+57 |         ensures status.balance != 0 || recipient.balance == old(recipient.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]
+    [PASS] disjunction group 2:
+      [FAIL] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]
+        counterexample: {status.balance=0, status.balance'=0, sender.balance'=32757, amount=16395, fee=16352, sender.balance=32757, treasury.balance=0, cap=2766, treasury.balance'=0, bps=9974, recipient.balance=13607, recipient.balance'=13607}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:58:17
+   |
+58 |         ensures status.balance != 0 || treasury.balance == old(treasury.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]
+    [PASS] disjunction group 3:
+      [PASS] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 0]
+      [FAIL] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 1]
+        counterexample: {amount=2067, treasury.balance'=0, bps=1315, fee=271, cap=7151, treasury.balance=0, sender.balance=30430, status.balance=0, recipient.balance'=7166, status.balance'=0, sender.balance'=30430, recipient.balance=7166}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:61:17
+   |
+61 |         ensures status.balance == 0 || amount * bps < (treasury.balance - old(treasury.balance)) * 10000 + 10000
+   |                 ^
+    [PASS] disjunction group 4:
+      [FAIL] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+        counterexample: {status.balance'=0, treasury.balance=0, recipient.balance'=13607, recipient.balance=13607, cap=2766, amount=16395, fee=16352, status.balance=0, treasury.balance'=0, sender.balance=32757, sender.balance'=32757, bps=9974}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:63:17
+   |
+63 |         ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+   |                 ^
+      [FAIL] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+        counterexample: {cap=17093, sender.balance=31545, amount=16383, fee=13512, treasury.balance=22943, recipient.balance'=18946, sender.balance'=31545, recipient.balance=18946, treasury.balance'=22943, status.balance=0, bps=8248, status.balance'=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:63:17
+   |
+63 |         ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+   |                 ^
+      [PASS] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 1]
+    [PASS] disjunction group 5:
+      [FAIL] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 0]
+        counterexample: {fee=0, treasury.balance=0, status.balance'=0, sender.balance'=1, sender.balance=1, recipient.balance'=1, status.balance=0, recipient.balance=1, bps=9999, cap=0, treasury.balance'=0, amount=1}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:65:17
+   |
+65 |         ensures old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0
+   |                 ^
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 1]
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 2]
+    => PASS
+
+  function validate[branch 3]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= amount * bps
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    [PASS] disjunction group 0:
+      [FAIL] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 0]
+        counterexample: {cap=0, sender.balance'=0, sender.balance=0, recipient.balance=0, treasury.balance'=0, status.balance=0, treasury.balance=0, recipient.balance'=0, fee=0, amount=1, bps=0, status.balance'=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:56:17
+   |
+56 |         ensures status.balance != 0 || sender.balance == old(sender.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || sender.balance == old(sender.balance) [branch 1]
+    [PASS] disjunction group 1:
+      [FAIL] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 0]
+        counterexample: {amount=1, sender.balance=0, sender.balance'=0, cap=0, bps=0, fee=0, treasury.balance=0, status.balance=0, recipient.balance=0, recipient.balance'=0, status.balance'=0, treasury.balance'=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:57:17
+   |
+57 |         ensures status.balance != 0 || recipient.balance == old(recipient.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || recipient.balance == old(recipient.balance) [branch 1]
+    [PASS] disjunction group 2:
+      [FAIL] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 0]
+        counterexample: {status.balance=0, sender.balance=0, bps=0, cap=0, recipient.balance=0, status.balance'=0, sender.balance'=0, fee=0, treasury.balance'=0, treasury.balance=0, recipient.balance'=0, amount=1}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:58:17
+   |
+58 |         ensures status.balance != 0 || treasury.balance == old(treasury.balance)
+   |                 ^
+      [PASS] ensures ensures: status.balance != 0 || treasury.balance == old(treasury.balance) [branch 1]
+    [PASS] disjunction group 3:
+      [PASS] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 0]
+      [FAIL] ensures ensures: status.balance == 0 || amount * bps < treasury.balance - old(treasury.balance) * 10000 + 10000 [branch 1]
+        counterexample: {sender.balance'=16386, recipient.balance=0, amount=11513, status.balance=0, recipient.balance'=0, sender.balance=16386, cap=0, treasury.balance'=0, bps=9815, fee=11300, status.balance'=0, treasury.balance=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:61:17
+   |
+61 |         ensures status.balance == 0 || amount * bps < (treasury.balance - old(treasury.balance)) * 10000 + 10000
+   |                 ^
+    [PASS] disjunction group 4:
+      [FAIL] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+        counterexample: {bps=1139, treasury.balance=0, fee=3493, recipient.balance'=2097, status.balance'=0, cap=32764, treasury.balance'=0, recipient.balance=2097, sender.balance'=9222, amount=30673, status.balance=0, sender.balance=9222}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:63:17
+   |
+63 |         ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+   |                 ^
+      [FAIL] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 0]
+        counterexample: {status.balance=0, sender.balance'=102, recipient.balance=0, bps=9999, treasury.balance=24699, sender.balance=102, treasury.balance'=24699, recipient.balance'=0, status.balance'=0, fee=32715, amount=32719, cap=8122}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:63:17
+   |
+63 |         ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+   |                 ^
+      [PASS] ensures ensures: old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0 [branch 1]
+    [PASS] disjunction group 5:
+      [FAIL] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 0]
+        counterexample: {bps=9207, treasury.balance=0, sender.balance'=4062, fee=10895, recipient.balance'=0, status.balance'=0, status.balance=0, treasury.balance'=0, amount=11834, recipient.balance=0, cap=0, sender.balance=4062}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:65:17
+   |
+65 |         ensures old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0
+   |                 ^
+      [PASS] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 1]
+      [FAIL] ensures ensures: old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0 || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000 [branch 2]
+        counterexample: {sender.balance=5294, status.balance=0, treasury.balance'=0, sender.balance'=5294, amount=32767, recipient.balance'=0, status.balance'=0, bps=6403, treasury.balance=0, cap=0, recipient.balance=0, fee=20980}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\no_overflow_guard.telos:65:17
+   |
+65 |         ensures old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0
+   |                 ^
+    => PASS
+
+RESULT: verification failed (see FAIL above).
+
+hint: some failures may be solver limitations (FM solver is incomplete for nonlinear arithmetic); try --solver z3 for exact results

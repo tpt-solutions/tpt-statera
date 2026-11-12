@@ -1,0 +1,81 @@
+Verifying C:\Programming\2 WIP\tpt-statera\proofs\transfer_validator.telos
+
+  function validate[branch 0]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= numer
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    => PASS
+
+  function validate[branch 1]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= numer
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    => PASS
+
+  function validate[branch 2]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= numer
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    => PASS
+
+  function validate[branch 3]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= numer
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    => PASS
+
+  function validate[branch 4]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= numer
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    => PASS
+
+  function validate[branch 5]:
+    [PASS] ensures ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+    [PASS] ensures ensures: sender.balance >= 0
+    [PASS] ensures ensures: sender.balance <= old(sender.balance)
+    [PASS] ensures ensures: recipient.balance >= old(recipient.balance)
+    [PASS] ensures ensures: treasury.balance >= old(treasury.balance)
+    [PASS] ensures ensures: treasury.balance - old(treasury.balance) * 10000 <= numer
+    [PASS] invariant Account maintained: sender.balance >= 0
+    [PASS] invariant Account maintained: recipient.balance >= 0
+    [PASS] invariant Account maintained: treasury.balance >= 0
+    [PASS] invariant Account maintained: status.balance >= 0
+    => PASS
+
+RESULT: all constraints satisfied.

@@ -1,0 +1,30 @@
+Verifying C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_vesting_creates_value.telos
+
+  function claim_ideal:
+    [FAIL] ensures ensures: claimed.balance + pool.balance == alloc_s
+      counterexample: {elapsed=4, pool.balance=0, pool.balance'=0, total=16, claimed.balance'=1, claimed.balance=0, alloc_s=0, claim_s=0, alloc=0}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_vesting_creates_value.telos:46:17
+   |
+46 |         ensures claimed.balance + pool.balance == alloc_s
+   |                 ^
+    [FAIL] ensures ensures: claimed.balance <= alloc_s
+      counterexample: {alloc=10, alloc_s=150, elapsed=15, pool.balance=150, total=15, claim_s=150, pool.balance'=0, claimed.balance=0, claimed.balance'=151}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_vesting_creates_value.telos:48:17
+   |
+48 |         ensures claimed.balance <= alloc_s
+   |                 ^
+    [PASS] ensures ensures: claimed.balance >= 0
+    [PASS] ensures ensures: pool.balance >= 0
+    [FAIL] ensures ensures: claimed.balance == elapsed * alloc
+      counterexample: {pool.balance'=0, alloc=0, alloc_s=0, claim_s=0, pool.balance=0, claimed.balance=0, claimed.balance'=1, total=16, elapsed=4}
+--> C:\Programming\2 WIP\tpt-statera\proofs\negative\ideal_vesting_creates_value.telos:53:17
+   |
+53 |         ensures claimed.balance == elapsed * alloc
+   |                 ^
+    [PASS] invariant Account maintained: claimed.balance >= 0
+    [PASS] invariant Account maintained: pool.balance >= 0
+    => FAIL
+
+RESULT: verification failed (see FAIL above).
+
+hint: some failures may be solver limitations (FM solver is incomplete for nonlinear arithmetic); try --solver z3 for exact results

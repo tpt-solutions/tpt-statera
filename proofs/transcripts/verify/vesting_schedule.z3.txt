@@ -1,0 +1,12 @@
+Verifying C:\Programming\2 WIP\tpt-statera\proofs\vesting_schedule.telos
+
+  function schedule:
+    [PASS] ensures ensures: v1 <= v2
+    [PASS] ensures ensures: c2 >= 0
+    [PASS] ensures ensures: c1 + c2 == v2
+    [PASS] ensures ensures: v2 <= alloc
+    [PASS] ensures ensures: v1 * total <= e1 * alloc
+    [PASS] ensures ensures: v2 * total <= e2 * alloc
+    => PASS
+
+RESULT: all constraints satisfied.

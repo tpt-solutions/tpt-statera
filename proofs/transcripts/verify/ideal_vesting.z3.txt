@@ -1,0 +1,13 @@
+Verifying C:\Programming\2 WIP\tpt-statera\proofs\ideal_vesting.telos
+
+  function claim_ideal:
+    [PASS] ensures ensures: claimed.balance + pool.balance == alloc_s
+    [PASS] ensures ensures: claimed.balance <= alloc_s
+    [PASS] ensures ensures: claimed.balance >= 0
+    [PASS] ensures ensures: pool.balance >= 0
+    [PASS] ensures ensures: claimed.balance == elapsed * alloc
+    [PASS] invariant Account maintained: claimed.balance >= 0
+    [PASS] invariant Account maintained: pool.balance >= 0
+    => PASS
+
+RESULT: all constraints satisfied.

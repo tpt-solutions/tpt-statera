@@ -21,10 +21,21 @@ import sys
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 
 
+TRANSCRIPTS = os.path.join(ROOT, "proofs", "transcripts", "verify")
+
+
 def run(telos, solver, path):
     cmd = [telos, "verify", "--solver", solver, path]
     proc = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
-    return proc.returncode, proc.stdout + proc.stderr
+    out = proc.stdout + proc.stderr
+    # Keep the raw solver output as evidence (todo 1C.03). Overwritten on each run.
+    os.makedirs(TRANSCRIPTS, exist_ok=True)
+    tag = os.path.splitext(os.path.basename(path))[0]
+    if os.path.basename(os.path.dirname(path)) == "negative":
+        tag = "negative." + tag
+    with open(os.path.join(TRANSCRIPTS, f"{tag}.{solver}.txt"), "w", newline="\n") as f:
+        f.write(out)
+    return proc.returncode, out
 
 
 def main():

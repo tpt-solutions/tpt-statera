@@ -75,6 +75,26 @@ restated denial clause.
 - **Vesting over time.** Only the claim step is modelled (`vesting_exact.telos`).
 - **Repeated assignment.** Refused by telos. Models here assign each variable once per path, as the verifier requires.
 
+## Integer domain and the u64 edge cases (todo 1C.03)
+
+The models quantify over all integers, not over `u64`. Telos cannot write the literal `2^64 − 1`
+(integer literals are limited to i64), so the bounds are symbolic (`cap`, `total`, `big`).
+
+Why this covers the `u64` edge cases:
+
+- Every `u64` value is an integer, so a universal proof over `Int` also holds for every `u64` input.
+  The `requires` only add `>= 0` and the caps, which every `u64` satisfies.
+- The edge cases named in the todo are instances of the universal proof, not separate facts:
+  zero amount (`amount >= 0` includes 0), fee rate 0 and 10000 (`bps` range), a sender exactly solvent or
+  one unit short (the Allow/Deny split in `transfer_validator_full.telos`), and recipient or treasury at
+  the cap (E6, the overflow denial, with `cap` symbolic).
+- The one thing the integer model does not show is that the Rust code does not wrap at `u64::MAX`. That is
+  the job of the checked `u128` arithmetic in `tpt-statera-core` and its edge-table tests (1B.03). The
+  differential test (1B.05) ties the Rust result to the ideal reference.
+
+Solver transcripts for every model and control are in `proofs/transcripts/verify/`, written by
+`scripts/verify_proofs.py`.
+
 ## Constraint-orthogonality assumption (todo 1C.05)
 
 This is a written argument. The solver does not produce it. A reviewer must check it under todo 1G.03.

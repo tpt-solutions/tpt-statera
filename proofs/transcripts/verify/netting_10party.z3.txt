@@ -1,0 +1,19 @@
+Verifying C:\Programming\2 WIP\tpt-statera\proofs\netting_10party.telos
+
+  function settle10:
+    [PASS] ensures ensures: b0.balance + b1.balance + b2.balance + b3.balance + b4.balance + b5.balance + b6.balance + b7.balance + b8.balance + b9.balance == old(b0.balance) + old(b1.balance) + old(b2.balance) + old(b3.balance) + old(b4.balance) + old(b5.balance) + old(b6.balance) + old(b7.balance) + old(b8.balance) + old(b9.balance)
+    [PASS] ensures ensures: b0.balance >= 0
+    [PASS] ensures ensures: b9.balance >= 0
+    [PASS] invariant Account maintained: b0.balance >= 0
+    [PASS] invariant Account maintained: b1.balance >= 0
+    [PASS] invariant Account maintained: b2.balance >= 0
+    [PASS] invariant Account maintained: b3.balance >= 0
+    [PASS] invariant Account maintained: b4.balance >= 0
+    [PASS] invariant Account maintained: b5.balance >= 0
+    [PASS] invariant Account maintained: b6.balance >= 0
+    [PASS] invariant Account maintained: b7.balance >= 0
+    [PASS] invariant Account maintained: b8.balance >= 0
+    [PASS] invariant Account maintained: b9.balance >= 0
+    => PASS
+
+RESULT: all constraints satisfied.

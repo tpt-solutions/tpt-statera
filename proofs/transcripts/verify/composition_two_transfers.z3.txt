@@ -1,0 +1,13 @@
+Verifying C:\Programming\2 WIP\tpt-statera\proofs\composition_two_transfers.telos
+
+  function two_steps:
+    [PASS] ensures ensures: a.balance + b.balance + c.balance == old(a.balance) + old(b.balance) + old(c.balance)
+    [PASS] ensures ensures: a.balance >= 0
+    [PASS] ensures ensures: b.balance >= 0
+    [PASS] ensures ensures: c.balance >= 0
+    [PASS] invariant Account maintained: a.balance >= 0
+    [PASS] invariant Account maintained: b.balance >= 0
+    [PASS] invariant Account maintained: c.balance >= 0
+    => PASS
+
+RESULT: all constraints satisfied.
