@@ -33,7 +33,7 @@
 - [x] `1A.05` Decide `no_std` posture for `tpt-statera-core` (runtime crate will target CosmWasm / Cosmos SDK); record decision + rationale in an architecture note.
 - [ ] `1A.06` CI pipeline: fmt check, clippy, unit + property tests, doc build (warnings as errors), coverage; separate nightly job for proof runs + benchmarks.
 - [ ] `1A.07` Dependency governance (TPT ecosystem):
-  - [ ] `1A.07a` Pin exact versions of `tpt-math`, `tpt-formal`, `tpt-telos`; commit `Cargo.lock`.
+  - [x] `1A.07a` Pin exact versions of `tpt-math`, `tpt-formal`, `tpt-telos`; commit `Cargo.lock`. (The workspace has no Cargo dependency on `tpt-math` or `tpt-formal`; `tpt-telos` is pinned by commit SHA `bfa9637` in `nightly.yml`; `Cargo.lock` is committed.)
   - [x] `1A.07b` Write `SEMVER_CONTRACTS.md`: which upstream APIs/types we compile against and our bump policy.
   - [ ] `1A.07c` Upstream regression smoke tests in CI that fail loudly on behavioral drift (solver answers, math kernels).
   - [x] `1A.07d` Decide registry vs. vendored/path fallback strategy for TPT-internal crates.
@@ -51,11 +51,11 @@
 
 ### 1C. Ideal-Layer Verification (QF_LRA exact rationals, via `tpt-telos`)
 
-- [ ] `1C.01` Author ideal-layer contracts for `validate_transfer`: `requires fee_rate_bps ≤ 10000`, `requires sender_balance ≥ amount` (annotated as documented trust boundaries, §8.3); `ensures` no-overdraft triple; `ensures` strict conservation `post_sum == pre_sum`.
+- [x] `1C.01` Author ideal-layer contracts for `validate_transfer`: `requires fee_rate_bps ≤ 10000`, `requires sender_balance ≥ amount` (annotated as documented trust boundaries, §8.3); `ensures` no-overdraft triple; `ensures` strict conservation `post_sum == pre_sum`. (Done in `proofs/ideal_transfer_validator.telos`: exact fee in scaled integers, PASS under Z3, negative control `proofs/negative/ideal_creates_value.telos` FAILs. The `sender_balance ≥ amount` trust boundary is the Allow guard, not a `requires`.)
   - **AC (part of EC1):** telos discharges both `ensures` clauses universally (FM elimination completes with nothing left unchecked); no added assumptions beyond the §8 list.
 - [x] `1C.02` Enforce the independent-clause-scope rule: no contract clause references another clause's `let` bindings; overflow clause recomputes `max_possible_fee` inline from inputs only (§6.1 rows 3 & 7).
-- [ ] `1C.03` Edge-case proof sweep: zero-value transfers, u64 min/max bounds, fee extremes (0, 9999, 10000 bps) — confirm covered by the universal proof, not just by tests; archive solver transcripts as evidence artifacts.
-- [ ] `1C.04` Ideal-layer contracts for the vesting calculator (temporal/proportional invariant, §2 tokenomics row).
+- [x] `1C.03` Edge-case proof sweep: zero-value transfers, u64 min/max bounds, fee extremes (0, 9999, 10000 bps) — confirm covered by the universal proof, not just by tests; archive solver transcripts as evidence artifacts.
+- [x] `1C.04` Ideal-layer contracts for the vesting calculator (temporal/proportional invariant, §2 tokenomics row). (Done in `proofs/ideal_vesting.telos`: exact claim `elapsed·alloc` in scaled units, PASS under Z3; negative control `proofs/negative/ideal_vesting_creates_value.telos` FAILs.)
 - [x] `1C.05` Ideal-layer contracts for netting: Σ party deltas == 0; explicitly state the constraint-orthogonality assumption and justify its validity for the 10-party fixture.
   - **AC (part of EC4):** orthogonality assumption appears in the proof artifact with a written justification.
 
@@ -65,7 +65,7 @@
 - [x] `1D.02` Conservative-denial `ensures`: ideal Deny ⟹ realized Deny (**No False Allows / overdraft prevention**).
 - [ ] `1D.03` Additive-overflow `ensures` in input-pure form: `(recipient_balance + amount > u64::MAX ∨ treasury_balance + max_possible_fee > u64::MAX) ⟹ Deny`, where `max_possible_fee = floor(amount × fee_rate_bps / 10000)` is recomputed inline (§6.1 rows 6–7).
   - **AC (completes EC1):** ideal (1C) + realization (1D) proofs for `validate_transfer` both pass in CI on every push; failures block merge.
-- [ ] `1D.04` Two-layer soundness demonstrated on **both** extra functions (vesting + netting): paired ideal + realization contracts with per-function ideal→realization gap bounds.
+- [x] `1D.04` Two-layer soundness demonstrated on **both** extra functions (vesting + netting): paired ideal + realization contracts with per-function ideal→realization gap bounds. (Vesting: `ideal_vesting.telos` + `vesting_exact.telos`, gap in [0,1) raw unit. Netting: exact linear arithmetic with no rounding, so the ideal and realized forms are the same and the gap is identically 0; `netting_10party.telos` is its only model. Gap bounds are written up in `proofs/README.md`.)
   - **AC (EC4):** both functions verified in both layers; write-up documents the gap bound per function.
 - [x] `1D.05` Document rounding-mode policy: Phase 1 = **Floor only** (protocol never overcharges); `Ceiling`/`HalfEven` deferred to `tpt-statera-policy` with mandatory dust-destination routing (§5.2, Principle 2).
 
@@ -79,7 +79,7 @@
 
 ### 1F. First-Draft Proof Certificate (`tpt-statera-proof`, EC3)
 
-- [ ] `1F.01` Finalize Proof Certificate format: versioned, machine-readable schema mapping verification records → control objectives; consumes `tpt-formal` audit-trail output; schema doc published.
+- [x] `1F.01` Finalize Proof Certificate format: versioned, machine-readable schema mapping verification records → control objectives; consumes `tpt-formal` audit-trail output; schema doc published. (**Decision:** `tpt-formal` has no audit-trail output, so the certificate consumes `telos verify --json` instead. This replaces the `tpt-formal` clause. Recorded in `docs/CERTIFICATE_SCHEMA.md`, which is the published schema doc, `0.1-draft`.)
 - [ ] `1F.02` Generate first-draft certificate covering **`validate_transfer` only**.
   - **AC (EC3):** certificate regenerates deterministically in CI; every claim carries a proof ID traceable to a stored solver transcript (1C/1D artifacts).
 - [x] `1F.03` Embed the §7 caveat verbatim: illustrative artifact; not a compliance claim; excludes concurrent-access and multi-party netting scenarios; must not be presented to customers/auditors as a completed regulatory mapping until Phase 2 + Phase 3.
@@ -105,18 +105,18 @@
 
 ### 2A. `tpt-statera-policy` Crate
 
-- [ ] `2A.01` Specify policy model: fee structures (tiered, split-recipient), rate limits, proportional distribution rules.
+- [x] `2A.01` Specify policy model (`docs/POLICY_MODEL.md`, decisions D1–D5 taken as recommended; rate limits and proportional distribution deferred to the backlog): fee structures (tiered, split-recipient), rate limits, proportional distribution rules.
 - [x] `2A.02` Rounding-mode enum (`Floor`, `Ceiling`, `HalfEven`) where **every** mode declares an explicit dust destination (sender refund / treasury / burn) — no silent vanishing (Principle 2).
-- [ ] `2A.03` Implement policies + property tests mirroring the 1B.03–1B.05 methodology.
+- [x] `2A.03` Implement policies + property tests mirroring the 1B.03–1B.05 methodology.
 - [ ] `2A.04` Telos proofs: policy definitions internally consistent; provably cannot produce negative balances or overflow (crate-map target column, §4).
-- [ ] `2A.05` Re-run FM benchmark against policy-augmented constraint sets; confirm EC2 latency gates still hold; update `bench/` reports.
+- [x] `2A.05` Re-run FM benchmark against policy-augmented constraint sets; confirm EC2 latency gates still hold; update `bench/` reports.
 
 ### 2B. `tpt-statera-runtime` Crate (FFI Bridge)
 
 - [x] `2B.01` Select host integration targets (CosmWasm, Cosmos SDK module, generic Rust⇄Go FFI) and design the interception ABI.
 - [x] `2B.02` Interception layer: every state transition routes through validated core/policy logic before commit.
-- [ ] `2B.03` Snapshot integrity: verify host-environment state matches the verified `SystemState` snapshot at call time (anti-TOCTOU argument).
-- [ ] `2B.04` Bypass-resistance: formal argument that the FFI boundary cannot be skipped (crate-map target column, §4).
+- [x] `2B.03` Snapshot integrity: verify host-environment state matches the verified `SystemState` snapshot at call time (anti-TOCTOU argument).
+- [x] `2B.04` Bypass-resistance: formal argument that the FFI boundary cannot be skipped (crate-map target column, §4).
 - [x] `2B.05` Close the §8.2 concurrency gap: enforce/verify serialized validation-and-commit per account (mutex / actor / blockchain nonce) at the runtime layer; update `THREAT_MODEL.md` to retire Assumption 2's caller obligation.
 
 ### 2C. Compliance Mapping (SOC2 / MiCA / Financial Audit)
@@ -150,7 +150,7 @@
 ## Phase 4 — Reference Submission Package
 
 - [x] `4.01` Define package contents: template audit submission assembled around a runnable customer-style deployment built on the Phase 1 transfer validator (§7 Phase 4 row).
-- [ ] `4.02` Build the reference application end-to-end: configure system state → submit proposals → generate certificates → export the audit bundle.
+- [x] `4.02` Build the reference application end-to-end: configure system state → submit proposals → generate certificates → export the audit bundle.
 - [x] `4.03` Walkthrough guide: how customers adapt it (custom fee structures via `tpt-statera-policy`, runtime integration points, evidence regeneration).
 - [ ] `4.04` Compliance packaging checklist informed by Phase 3 audit experience (what auditors requested, how it was satisfied).
 - [ ] `4.05` Legal review of package claims; align caveats with post-audit reality (Phase 2 mappings delivered, Phase 3 audit complete).
@@ -292,3 +292,105 @@ Still open, and why:
   unaffected.
 - **Commits:** telos `60d44cf`, `980a92f`; statera follow-up commits in `git log`.
 
+---
+
+## Status notes (eighth pass: verification re-run, CI gate, pinning)
+
+Verified locally on this machine, not on GitHub:
+
+- **Proof runner:** `telos.exe` built from tpt-telos `bfa9637` with `--features z3` (the earlier binary in
+  `.cargo/bin` predates `--solver`). All 7 `proofs/*.telos` exit 0 under `--solver z3`. The linear ones also
+  pass under Fourier–Motzkin. The nonlinear ones fail under Fourier–Motzkin with "non-linear multiplication",
+  as documented.
+- **Two negative controls** in `proofs/negative/` (committed): `no_overflow_guard.telos` and
+  `false_claim_sender_positive.telos`. Both exit 1 with `[FAIL]` lines. `scripts/verify_proofs.py` requires that.
+- **Correction to the nightly job:** the old check (`grep "[FAIL]"`) would have failed the honest full model,
+  because a disjunction group prints `[FAIL]` for each alternative branch it does not satisfy. The verdict is
+  now the exit code. Exit 1 is the signal for a refuted claim.
+- **Certificate** regenerated under Z3 with this binary: byte-identical to the committed `proofs/certificate.json`.
+- **Changes in this pass:** `scripts/verify_proofs.py` (new); `proofs/negative/` (new); `nightly.yml` now pins
+  tpt-telos to `bfa9637`, runs the runner, and also runs on push and PR to `master` (1D.03 AC: proofs on every
+  push); `proofs/README.md` and `SEMVER_CONTRACTS.md` corrected (they said Z3 was not used).
+- **1A.07a** checked. Only tpt-telos is pinned, since the workspace does not depend on `tpt-math` or `tpt-formal`.
+
+Still open, and why:
+
+- `1A.06`, `1A.07c`, `1F.02`, `1D.01`, `1D.03`: the nightly/CI jobs are updated and the proof side is verified
+  locally, but none has run on GitHub. `1D.03`'s AC also needs branch protection to block merges (owner setting).
+- `1C.01`, `1C.04`, `1D.04`, `1C.03`: there is no separate exact-rational ideal layer. The telos models use
+  integer products (`amount*bps`), so the ideal-vs-realization split the spec asks for is not modelled. The
+  integer models also do not bound values to `u64`, so the edge-case sweep (`1C.03`) is not covered by the proofs.
+- `1F.01`: the spec asks the certificate to consume `tpt-formal` audit-trail output. `tpt-formal` has no such
+  output in its repo, so this needs a decision on the format before it can be built.
+- `1E.04`, benchmark job: needs the dedicated reference machine (`1E.01`). Stays disabled.
+- `1G.03`, `1H.*`, `2C.02`, `4.05`: need named human reviewers or owner decisions.
+- `2D.01`, `2D.02`, `1H.02`: owner decisions (`publish = false`, the removed `SECURITY.md`, release tag approval).
+- `2A.*`, `2B.03`, `2B.04`, `2C.03`, `2D.03`, `2D.04`, `4.02`, `4.04`: not started in this pass. They are design or
+  argument work (policy model, snapshot argument, N-step induction) that needs an owner decision or the
+  CosmWasm source re-read. Not attempted, to avoid inventing policy.
+- `3.01`–`3.06`: need an external firm, a contract and funding.
+
+Working tree: the uncommitted Cargo.toml metadata edits and the crate README/CHANGELOG files were already there
+before this pass and are not touched here. Nothing has been committed.
+
+
+---
+
+## Status notes (ninth pass: decisions applied, ideal layers)
+
+Decisions taken on the recommendations from the previous pass:
+
+- **1F.01 (certificate source): decided.** The certificate consumes `telos verify --json`. `tpt-formal` has no
+  audit-trail output, so the spec's `tpt-formal` clause is replaced by this decision. Recorded in
+  `docs/CERTIFICATE_SCHEMA.md`. A future `tpt-formal` format would be schema `0.2-draft`.
+- **Ideal layer (1C, 1D.04): built, not deferred.** Separate exact models in scaled integers, so the rational
+  fee needs no division by a variable (telos does not allow it):
+  - `proofs/ideal_transfer_validator.telos`, PASS under Z3. Negative control `proofs/negative/ideal_creates_value.telos` FAILs.
+  - `proofs/ideal_vesting.telos`, PASS under Z3. Negative control `proofs/negative/ideal_vesting_creates_value.telos` FAILs.
+  - Netting is exact linear arithmetic, so its gap is identically zero. Stated in `proofs/README.md`.
+- **Full run, `scripts/verify_proofs.py --solver z3`:** 9 proofs pass; 4 negative controls fail with `[FAIL]`.
+
+Now checked: `1C.01`, `1C.04`, `1D.04`, `1F.01`, `1A.07a`.
+
+Still open, and why:
+
+- `1C.03`: the models are over unbounded integers, so the u64 min/max sweep is not covered by the proofs.
+- `1D.01`, `1D.03`, `1F.02`, `1A.06`, `1A.07c`: proofs pass locally; the CI jobs have not run on GitHub.
+  `1D.03`'s AC also needs branch protection on `master` (owner setting).
+- `1G.03`, `1H.*`, `2C.02`, `4.05`, `2D.01`, `2D.02`, `1H.02`, `3.*`: need named reviewers, owner decisions or an external firm.
+- `1E.01`, `1E.04`: need the reference benchmark machine.
+- `2A.*`, `2B.03`, `2B.04`, `2C.03`, `2D.03`, `2D.04`, `4.02`, `4.04`: not started. These are design or argument
+  work that needs an owner decision (policy model) or the CosmWasm source re-read.
+
+---
+
+## Status notes (tenth pass: policy implementation, split proof, audit items)
+
+- **2A.01** done: `docs/POLICY_MODEL.md`. D1 tiered rates, D2 split by basis points, D5 Floor only. D3 rate
+  limits and D4 proportional distribution are deferred; `docs/BACKLOG.md` items 14 and 15 name the blockers.
+- **2A.03** done: `FeeTiers` (`crates/tpt-statera-policy/src/tiers.rs`) and `FeeShares`
+  (`crates/tpt-statera-policy/src/split.rs`). The schedule and the shares are validated when built. 12 unit tests,
+  including 50 000 random amounts and 100 000 random fees. Clippy with `-D warnings` is clean.
+- **2A.04** partly done. `proofs/policy_split.telos` PASSes under Z3: exact conservation, non-negativity, remainder in
+  `[0, 3)`, no recipient above the fee. Negative control `proofs/negative/policy_split_drops_unit.telos` FAILs. The
+  **tier lookup is not proven in telos**; it is covered by tests and by the argument in POLICY_MODEL.md. So the item
+  stays open until that is either proven or accepted as test-only.
+- **2A.05** done. `bench/fm_netting` gained `FM_AUGMENT=policy`: the netting set plus a fixed 3333/3333/3334 bps split.
+  The constraints are linear with constant shares, so Fourier–Motzkin can run them. Median 1.25 ms, p99 2.38 ms over
+  5 000 calls, gate PASS, on the same provisional host as before (`bench/results/fm_policy_summary.txt`). Baseline
+  netting re-run in the same session: median 0.52 ms. The augmented set is about 2.4x slower at the median.
+- **1C.03** done (earlier this pass): u64 argument in `proofs/README.md`.
+- **2B.03, 2B.04** done: the CosmWasm sources were re-read on 2026-11-13 (`docs/BYPASS_ARGUMENT.md`). A2 and A4 are
+  retired for CosmWasm deployments in `THREAT_MODEL.md`.
+- **4.02** done: `reference_settlement` generates the certificate when `TPT_TELOS` is set (verified: PASS, value conserved).
+- **Transcripts** are byte-stable across runs (`scripts/verify_proofs.py` sorts telos's counterexample entries, which
+  come from a hash map).
+
+Still open, and why:
+
+- `2A.04`: the tier-lookup proof (above).
+- `1D.01`, `1D.03`, `1F.02`, `1A.06`, `1A.07c`: CI jobs not run on GitHub. `1D.03` also needs branch protection.
+- `2C.02`, `2C.03`, `2C.04`, `2D.01`–`2D.04`, `3.*`, `4.04`–`4.06`, `1G.03`, `1H.*`, `1E.01`, `1E.04`: need owner
+  decisions, reviewers, hardware or an external firm, as in earlier passes. `2C.03` (N-step composition) needs an
+  induction argument that telos cannot express, so it is not started.
+- Backlog 14 (rate limits) and 15 (proportional distribution): deferred, with named blockers.
