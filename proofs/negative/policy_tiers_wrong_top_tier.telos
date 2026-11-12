@@ -1,0 +1,67 @@
+// NEGATIVE CONTROL (todo 2A.04, nightly): this file must FAIL. Amounts at or above t2 get the middle tier.
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) 2026 TPT Solutions
+//
+// tpt-statera — tier selection of tpt-statera-policy, three-tier shape (todo 2A.04, docs/POLICY_MODEL.md D1).
+//
+// The Rust `FeeTiers::rate_for` selects the last tier whose threshold is at or below the amount.
+// Telos has no loops or arrays, so this file proves the same selection for a schedule of exactly three
+// tiers: (0, r0), (t1, r1), (t2, r2) with 0 < t1 < t2. The generic function is covered by the Rust tests
+// (tiers.rs), not by this proof.
+//
+// SPECIFICATION of the schedule (requires): the Rust constructor rejects a schedule that does not start
+// at 0, is not strictly increasing, or has a rate above 10 000. Those rules are the requires here.
+//
+// PROVED (under --solver z3):
+//   T1 totality: the selected rate is one of r0, r1, r2 (every amount has a tier)
+//   T2 the selection is the tier the Rust lookup picks: below t1 -> r0, [t1, t2) -> r1, at or above t2 -> r2
+//   T3 every selected rate is in [0, 10 000], so the validator's fee_rate_bps guard is never hit
+//
+// Verified: `telos verify --solver z3 proofs/policy_tiers_3.telos`
+
+@boundary(cpu_bound)
+@state(persistent)
+module PolicyTiers3 {
+    invariant Account {
+        balance >= 0
+    }
+
+    func select_rate(mut rate: Account, amount: Int,
+                     t1: Int, t2: Int, r0: Int, r1: Int, r2: Int)
+        requires amount >= 0
+        requires t1 >= 1
+        requires t2 > t1
+        requires r0 >= 0
+        requires r1 >= 0
+        requires r2 >= 0
+        requires r0 <= 10000
+        requires r1 <= 10000
+        requires r2 <= 10000
+        requires rate.balance == 0
+        // T1 totality: the selected rate is one of the three tier rates
+        ensures rate.balance == r0 || rate.balance == r1 || rate.balance == r2
+        // T2 the selection matches the Rust lookup (the last tier whose threshold is <= amount)
+        ensures amount >= t1 || rate.balance == r0
+        ensures amount < t1 || amount >= t2 || rate.balance == r1
+        ensures amount < t2 || rate.balance == r2
+        // T3 bounds: 0 <= rate <= 10 000
+        ensures rate.balance >= 0
+        ensures rate.balance <= 10000
+    {
+        if amount < t1 {
+            mutate state {
+                rate.balance = r0;
+            }
+        } else {
+            if amount < t2 {
+                mutate state {
+                    rate.balance = r1;
+                }
+            } else {
+                mutate state {
+                    rate.balance = r1;
+                }
+            }
+        }
+    }
+}
