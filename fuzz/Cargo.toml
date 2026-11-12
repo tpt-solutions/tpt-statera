@@ -1,0 +1,39 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Copyright (c) 2026 TPT Solutions
+#
+# cargo-fuzz targets (todo 5E.02). Deliberately outside the workspace, like bench/: libfuzzer needs nightly.
+# Run on Linux or macOS (libFuzzer does not build on Windows MSVC):
+#   cargo install cargo-fuzz
+#   cargo +nightly fuzz run validate_transfer -- -max_total_time=60
+#   cargo +nightly fuzz run ledger_submit -- -max_total_time=60
+
+[package]
+name = "tpt-statera-fuzz"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+tpt-statera-core = { path = "../crates/tpt-statera-core" }
+tpt-statera-runtime = { path = "../crates/tpt-statera-runtime" }
+tpt-statera-testkit = { path = "../crates/tpt-statera-testkit" }
+
+[[bin]]
+name = "validate_transfer"
+path = "fuzz_targets/validate_transfer.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "ledger_submit"
+path = "fuzz_targets/ledger_submit.rs"
+test = false
+doc = false
+bench = false
+
+[workspace]

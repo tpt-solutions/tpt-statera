@@ -4,11 +4,11 @@
 //! Property tests over arbitrary valid inputs (todo 1B.04).
 //! Deterministic seed; set `TPT_PROP_ITERS` to run more iterations locally.
 
-mod common;
 use common::{post_sum, pre_sum, Rng};
 use tpt_statera_core::{
     validate_transfer, SystemState, TransferProposal, ValidationOutcome, BPS_DENOMINATOR,
 };
+use tpt_statera_testkit as common;
 
 fn iters() -> u64 {
     std::env::var("TPT_PROP_ITERS")

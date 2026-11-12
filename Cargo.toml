@@ -12,6 +12,7 @@ members = [
     "crates/tpt-statera-runtime",
     "crates/tpt-statera-cosmwasm",
     "crates/tpt-statera-cli",
+    "crates/tpt-statera-testkit",
 ]
 
 [workspace.package]

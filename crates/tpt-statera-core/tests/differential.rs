@@ -8,9 +8,9 @@
 //! state can be ideally insolvent by a fraction of a unit yet realized-solvent.
 //! These tests pin down the exact relationship instead of asserting the clause.
 
-mod common;
 use common::{ideal_allows, post_sum, pre_sum, Rng};
 use tpt_statera_core::{validate_transfer, SystemState, TransferProposal, ValidationOutcome};
+use tpt_statera_testkit as common;
 
 /// Exact integer model with the **floor** fee. Independent formulation of the rules.
 fn floor_model_allows(state: SystemState, p: TransferProposal) -> bool {

@@ -62,6 +62,10 @@ jobs:
           LD_LIBRARY_PATH: ${{ env.Z3_DIR }}
         run: cargo build --release -p tpt-telos --features z3
 
+      - name: Build the FM benchmark crate (outside the workspace; needs the sibling telos checkout)
+        # todo 5A.04: bench/fm_netting depends on ../../../tpt-telos, which resolves to the checkout above.
+        run: cargo build --manifest-path tpt-statera/bench/fm_netting/Cargo.toml --release
+
       - name: Verify every proof under Z3, and every negative control must fail
         working-directory: tpt-statera
         env:
@@ -77,7 +81,25 @@ jobs:
           set -e
           python3 scripts/generate_certificate.py \
             --telos ../tpt-telos/target/release/telos --solver z3
-          git diff --exit-code proofs/certificate.json proofs/transcripts/
+          # Gate only the certificate and the JSON transcripts. The verify/*.txt logs are solver evidence:
+          # the solver picks different counterexample witnesses per platform, so byte-comparing them flakes.
+          # Their verdicts are already gated by the exit codes above.
+          git diff --exit-code proofs/certificate.json 'proofs/transcripts/*.json'
+
+  fuzz:
+    # todo 5E.02: 60 seconds per target on every nightly run. libFuzzer needs nightly and Linux.
+    # NOT YET RUN on GitHub.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: taiki-e/install-action@cargo-fuzz
+      - name: Fuzz validate_transfer (60 s)
+        working-directory: fuzz
+        run: cargo fuzz run validate_transfer -- -max_total_time=60
+      - name: Fuzz Ledger::submit (60 s)
+        working-directory: fuzz
+        run: cargo fuzz run ledger_submit -- -max_total_time=60
 
   benchmark:
     # Not enabled. It needs a dedicated reference machine (todo 1E.01). On shared runners the

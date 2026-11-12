@@ -73,3 +73,8 @@ bench/fm_netting/Cargo.lock
 __pycache__/
 *.pyc
 
+
+# cargo-fuzz build and output (todo 5E.02)
+fuzz/target/
+fuzz/corpus/
+fuzz/artifacts/

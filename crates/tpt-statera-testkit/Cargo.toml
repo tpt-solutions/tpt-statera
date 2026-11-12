@@ -1,0 +1,28 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Copyright (c) 2026 TPT Solutions
+
+[package]
+name = "tpt-statera-testkit"
+description = "Test helpers for integrators of tpt-statera: a seeded PRNG, exact oracles, and invariant checkers (todo 5E.01)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["testing", "property-testing", "ledger", "finance"]
+categories = ["development-tools::testing", "finance"]
+publish = false
+
+[features]
+# Optional proptest strategies, edge-biased like `Rng::u64_edge`. Off by default.
+proptest = ["dep:proptest"]
+
+[dependencies]
+tpt-statera-core = { path = "../tpt-statera-core" }
+proptest = { version = "1", optional = true }
+
+[lints]
+workspace = true

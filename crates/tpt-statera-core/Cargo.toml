@@ -26,6 +26,8 @@ serde = ["dep:serde"]
 serde = { version = "1", default-features = false, features = ["derive"], optional = true }
 
 [dev-dependencies]
+# Test helpers (todo 5E.01). Dev-only, so the library has no dependency on it.
+tpt-statera-testkit = { path = "../tpt-statera-testkit" }
 # Used only by the `serde` feature tests. Not a runtime dependency.
 serde_json = "1"
 

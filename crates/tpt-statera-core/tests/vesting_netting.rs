@@ -3,11 +3,11 @@
 
 //! Tests for the vesting calculator (todo 1B.07) and netting (todo 1B.08).
 
-mod common;
 use common::Rng;
 use tpt_statera_core::fixtures::{TEN_PARTY_BALANCES, TEN_PARTY_DELTAS};
 use tpt_statera_core::netting::{apply_settlement, check_zero_sum, NettingError};
 use tpt_statera_core::vesting::{claimable, vested_at, VestingError};
+use tpt_statera_testkit as common;
 
 #[test]
 fn vesting_never_exceeds_ideal_proportion() {
