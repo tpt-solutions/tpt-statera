@@ -70,9 +70,34 @@ What the chain adds, and what this argument depends on:
 3. **No submessages.** The adapter never dispatches submessages, so the partial-revert exception for
    submessages does not apply.
 
-Status: claims 1 and 3 were checked against search-result excerpts of the CosmWasm pages, not a full read. Claim 2 is
-also checked in the simulator (see above).
-Re-read the pages against the pinned `cosmwasm-std` 3.0.11 before relying on them.
+### Source re-read (checked 2026-11-13)
+
+The three claims were re-checked against the pages as they now stand, and against the pinned sources
+(`cosmwasm-std` 3.0.11 and `cosmwasm-vm` 3.0.11, from the cargo registry).
+
+- **Claim 1 (serial execution): confirmed for transactions.** The Transactions chapter
+  (cosmwasm.github.io/core/architecture/transactions) says the transactions in a committed block are fed to the
+  Cosmos SDK "sequentially in order", and that messages within one transaction "are executed in turn". The old
+  `cosmwasm.cosmos.network` URL now redirects, so the cited link was out of date.
+- **Claim 2 (error reverts): confirmed for the adapter's case.** The Semantics chapter
+  (cosmwasm.github.io/core/architecture/semantics) says: "If one message fails, all later messages are skipped and
+  all state changes are reverted", and that an `x/wasm` error "will revert the entire transaction". So a `Deny`
+  (an `Err` from `transfer`) reverts the message and any earlier valid message in its transaction. This is a
+  chain rule. The page does not spell out, for a single contract entry point, which state it reverts. `Deny`
+  writes nothing before it returns `Err` in any case, so the Deny path's no-write result does not depend on the
+  rollback. The simulator tests in `crates/tpt-statera-cosmwasm/tests/multitest.rs` check the rollback behaviour in
+  `cw-multi-test`, not on a chain.
+- **Claim 3 (no submessages): confirmed in our code.** `crates/tpt-statera-cosmwasm/src/lib.rs` builds every
+  response with `Response::new()` and `add_attribute` only. There is no `SubMsg`, `add_submessage` or `reply`.
+  The Reply chapter says an error does not abort the whole transaction "if and only if the `reply` is called",
+  so the no-submessage property is what keeps the rollback rule above unqualified.
+
+**Correction to the earlier text.** The IBC and cross-chain caveat was attributed to these same pages. The
+Transactions and Semantics chapters do not discuss IBC. The caveat is still true for this adapter, because it
+makes no cross-chain calls, but it needs its own source (the IBC documentation), which has not been read.
+
+**The only state-changing message is `Transfer`.** `ExecuteMsg` has one variant, and `execute` routes only to
+`transfer`. That is a code fact, checked by reading `lib.rs`.
 
 What the chain does not give us, and the adapter does not supply:
 
@@ -80,11 +105,30 @@ What the chain does not give us, and the adapter does not supply:
   against this argument.
 - **Instantiate trust.** The fee rate and initial balances are set by whoever instantiates the contract
   (THREAT_MODEL A3). The adapter cannot check that.
-- **IBC and cross-contract calls.** Atomicity does not extend across chains, per the same sources. The
-  adapter makes no cross-chain calls.
+- **IBC and cross-chain calls.** Not covered by the pages above. The adapter makes no cross-chain calls, so
+  this does not apply to it today.
+
+## Snapshot integrity on CosmWasm (todo 2B.03)
+
+The in-process runtime takes a snapshot under the account locks and re-checks the versions before it writes
+(claims 1 and 3 above). On CosmWasm there is no separate snapshot to drift:
+
+- `transfer` reads `sender`, `recipient` and `treasury` balances from `deps.storage`, calls `validate_transfer`
+  on those values, and on `Allow` writes the three results back to the same `deps.storage` (see
+  `crates/tpt-statera-cosmwasm/src/lib.rs`, `transfer`). The validated values and the written values come from
+  one storage view inside one call.
+- That view is the transaction's cache. The Transactions chapter says a transaction "only writes to a cache,
+  which may be committed or rolled back on error", so no other transaction's writes appear in the middle of this
+  call. The serial execution of transactions (claim 1) is what makes this hold.
+- So the host-environment state that the validator saw is the state the chain commits. The check that 2B.03
+  asks for is satisfied structurally, not by a runtime comparison.
+
+This relies on the serial-execution rule (claim 1) and on the cache rule above. Both are confirmed in the chain
+documentation as of 2026-11-13. It does not cover an off-chain host that holds a `Ledger`, where the version check
+in `Ledger::submit` is the control.
 
 ## Remaining path
 
-1. Re-read the cited CosmWasm pages against cosmwasm-std 3.0.11 and record the date checked.
-2. Retire THREAT_MODEL A2 and A4 for CosmWasm deployments only, after step 1.
+1. Re-read the cited CosmWasm pages against cosmwasm-std 3.0.11 and record the date checked. Done 2026-11-13 (above).
+2. Retire THREAT_MODEL A2 and A4 for CosmWasm deployments only. Done in `THREAT_MODEL.md`, on the basis of this re-read.
 3. Keep A4 in force for any off-chain host that holds a `Ledger` directly.

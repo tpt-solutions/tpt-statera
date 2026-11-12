@@ -21,6 +21,9 @@ in §5.
    sender balance can both return `Allow` and together overdraw the account. **Deploying teams must serialize
    validation-and-commit per account** (mutex, actor, or blockchain nonce). This is a caller obligation until
    `tpt-statera-runtime` closes the gap (todo 2B.05).
+   **Retired for CosmWasm deployments** (todo 2B.04, re-read 2026-11-13): the chain runs the transactions in a
+   block sequentially, and the adapter's only state-changing message is `Transfer`. See
+   `docs/BYPASS_ARGUMENT.md`. The obligation stays in force for any off-chain host that holds a `Ledger`.
 
 3. **Trusted policy inputs.** `fee_rate_bps` and `SystemState` come from a trusted configuration or state
    layer, not from an end user or an untrusted oracle. The preconditions `fee_rate_bps <= 10_000` and
@@ -30,6 +33,9 @@ in §5.
 4. **No enforcement-bypass guarantee yet.** Nothing in Phase 1 prevents a compromised or misconfigured host
    from skipping `validate_transfer` or ignoring a `Deny`. That is the purpose of `tpt-statera-runtime`, which
    is out of scope for Phase 1 (todo 2B.04).
+   **Retired for CosmWasm deployments** (re-read 2026-11-13): the contract's only write path is `transfer`,
+   which returns `Err` on `Deny` and writes nothing, and the chain reverts a failed transaction. See
+   `docs/BYPASS_ARGUMENT.md`. It stays in force for any off-chain host that holds a `Ledger` directly.
 
 ## 2. Threats considered
 
