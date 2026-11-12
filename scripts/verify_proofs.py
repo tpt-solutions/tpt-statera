@@ -39,6 +39,9 @@ def run(telos, solver, path):
     cmd = [telos, "verify", "--solver", solver, path]
     proc = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT)
     out = canonical(proc.stdout + proc.stderr)
+    # telos echoes absolute paths (C:\... on Windows, /home/runner/... on CI). Strip the repo root so the
+    # archived transcript is the same on every machine.
+    out = out.replace(ROOT + os.sep, "").replace(ROOT, ".").replace("\\", "/")
     # Keep the raw solver output as evidence (todo 1C.03). Overwritten on each run.
     os.makedirs(TRANSCRIPTS, exist_ok=True)
     tag = os.path.splitext(os.path.basename(path))[0]

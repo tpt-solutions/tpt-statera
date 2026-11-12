@@ -1,0 +1,42 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Copyright (c) 2026 TPT Solutions
+#
+# cargo-deny policy (todo 5A.04, feeds 2D.01 dependency-vulnerability scanning).
+# Run locally with: cargo deny check
+
+[advisories]
+version = 2
+yanked = "deny"
+# Each ignore below is a known, accepted risk with a reason. Remove the entry when the upstream
+# dependency is upgraded. Both come through `cosmwasm-std` (pinned to =3.0.11 by owner decision).
+ignore = [
+    { id = "RUSTSEC-2024-0436", reason = "paste is unmaintained. Transitive via cosmwasm-std -> cosmwasm-crypto -> ark-*. No safe upgrade exists upstream." },
+    { id = "RUSTSEC-2026-0387", reason = "crypto-bigint timing variability on secret integers. Transitive via cosmwasm-std. This workspace performs no secret-integer arithmetic (the ledger validates public balances). Open for owner review: todo 5A.04." },
+]
+
+[licenses]
+version = 2
+# Only permissive licenses are accepted for dependencies, matching the MIT OR Apache-2.0 workspace.
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "Zlib",
+]
+confidence-threshold = 0.9
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+# Workspace crates depend on each other by path, which cargo-deny otherwise reports as a wildcard.
+allow-wildcard-paths = true
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

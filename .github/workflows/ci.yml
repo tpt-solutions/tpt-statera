@@ -34,6 +34,15 @@ jobs:
       - name: Doc build (warnings are errors)
         run: cargo doc --workspace --no-deps
 
+  audit:
+    # todo 5A.04 (feeds 2D.01): advisories, licenses, banned and unknown sources. Policy in deny.toml.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: taiki-e/install-action@cargo-deny
+      - name: Dependency policy (advisories, licenses, bans, sources)
+        run: cargo deny check
+
   coverage:
     runs-on: ubuntu-latest
     steps:
@@ -48,6 +57,10 @@ jobs:
   no-std:
     # AD-2: tpt-statera-core is no_std with zero dependencies. Check it on targets without std.
     runs-on: ubuntu-latest
+    env:
+      # Job-level override of the workflow RUSTFLAGS. It repeats the wasm link flag from
+      # .cargo/config.toml, because a top-level RUSTFLAGS replaces that file's value.
+      RUSTFLAGS: "-D warnings -C link-arg=--allow-undefined"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -64,6 +77,10 @@ jobs:
     # Runs the official CosmWasm contract checker on the built contract. cosmwasm-check does not build
     # on Windows (wasmer singlepass), which is why it runs here on Linux. NOT YET RUN on GitHub.
     runs-on: ubuntu-latest
+    env:
+      # Job-level override of the workflow RUSTFLAGS. It repeats the wasm link flag from
+      # .cargo/config.toml, because a top-level RUSTFLAGS replaces that file's value.
+      RUSTFLAGS: "-D warnings -C link-arg=--allow-undefined"
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
