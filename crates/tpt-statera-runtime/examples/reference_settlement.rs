@@ -72,7 +72,7 @@ fn main() -> std::io::Result<()> {
                 format!("committed fee={rounded_fee} dust_scaled={dust_retained_by_sender}")
             }
             Submission::Committed(ValidationOutcome::Deny) => "internal: committed a Deny".into(),
-            Submission::Denied => "denied".into(),
+            Submission::Denied(reason) => format!("denied: {reason}"),
             Submission::Stale => "stale".into(),
         };
         writeln!(log, "proposal {i}: {from}->{to} amount={amount}: {line}").unwrap();

@@ -7,6 +7,10 @@ All notable changes to `tpt-statera-core`. Claims stay inside the spec §7 cavea
 
 ### Added
 
+- `validate_transfer_explained` and `DenyReason` (todo 5B.01). `validate_transfer` is unchanged.
+- `prelude`, `TransferProposal::new`, `SystemState::new`, and `Display` for `DenyReason` and `ValidationOutcome`.
+- Optional `serde` feature (off by default) with `deny_unknown_fields`.
+- `quickstart` example (`cargo run -p tpt-statera-core --example quickstart`).
 - `validate_transfer`: Floor fee, explicit dust, deny-on-overflow and deny-on-insolvency.
 - Linear vesting calculator.
 - Atomic 10-party netting.

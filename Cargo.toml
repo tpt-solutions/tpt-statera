@@ -5,8 +5,9 @@
 resolver = "2"
 members = [
     "crates/tpt-statera-core",
+    # Certificate caveat constant; the verifier lands in todo 5D.01.
     "crates/tpt-statera-proof",
-    # Placeholder stubs — out of scope for Phase 1 (todo 1A.02).
+    # Rounding policy, tiered fees and fee splits (todo 2A).
     "crates/tpt-statera-policy",
     "crates/tpt-statera-runtime",
     "crates/tpt-statera-cosmwasm",
@@ -18,6 +19,8 @@ edition = "2021"
 rust-version = "1.75"
 license = "MIT OR Apache-2.0"
 authors = ["TPT Solutions"]
+repository = "https://github.com/tpt-solutions/tpt-statera"
+homepage = "https://github.com/tpt-solutions/tpt-statera"
 
 [workspace.lints.rust]
 unsafe_code = "deny"

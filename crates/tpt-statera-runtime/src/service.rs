@@ -27,7 +27,7 @@ use std::net::{TcpListener, TcpStream, ToSocketAddrs};
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread::{self, JoinHandle};
 
-use tpt_statera_core::ValidationOutcome;
+use tpt_statera_core::{DenyReason, ValidationOutcome};
 
 use crate::{AccountId, Ledger, LedgerError, Submission};
 
@@ -50,6 +50,27 @@ impl From<io::Error> for ServiceError {
     }
 }
 
+impl std::fmt::Display for ServiceError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ServiceError::WriterGone => f.write_str("the writer thread has stopped"),
+            ServiceError::Ledger(e) => write!(f, "ledger error: {e}"),
+            ServiceError::Io(e) => write!(f, "transport error: {e}"),
+            ServiceError::Protocol(msg) => write!(f, "protocol error: {msg}"),
+        }
+    }
+}
+
+impl std::error::Error for ServiceError {
+    fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
+        match self {
+            ServiceError::Ledger(e) => Some(e),
+            ServiceError::Io(e) => Some(e),
+            _ => None,
+        }
+    }
+}
+
 /// A reply from a submission. Mirrors [`Submission`] with the fee exposed on the wire.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Reply {
@@ -58,8 +79,9 @@ pub enum Reply {
         /// Fee charged to the sender, in whole units.
         fee: u64,
     },
-    /// Denied by validation. No state changed.
-    Denied,
+    /// Denied by validation, with the first failing check. No state changed.
+    /// On the wire: `D <code>`. A bare `D` from an older server parses as [`DenyReason::Unclassified`].
+    Denied(DenyReason),
     /// Snapshot went stale. No state changed. The caller may resubmit.
     Stale,
 }
@@ -70,8 +92,11 @@ impl From<Submission> for Reply {
             Submission::Committed(ValidationOutcome::Allow { rounded_fee, .. }) => {
                 Reply::Committed { fee: rounded_fee }
             }
-            // The ledger never commits a Deny. Map it defensively to Denied.
-            Submission::Committed(ValidationOutcome::Deny) | Submission::Denied => Reply::Denied,
+            // The ledger never commits a Deny. Map it defensively to an unclassified denial.
+            Submission::Committed(ValidationOutcome::Deny) => {
+                Reply::Denied(DenyReason::Unclassified)
+            }
+            Submission::Denied(reason) => Reply::Denied(reason),
             Submission::Stale => Reply::Stale,
         }
     }
@@ -197,7 +222,7 @@ fn handle_connection(
         let reply = match parse_request(&line) {
             Ok((s, r, a)) => match service.submit(s, r, a) {
                 Ok(Reply::Committed { fee }) => format!("C {fee}"),
-                Ok(Reply::Denied) => "D".to_string(),
+                Ok(Reply::Denied(reason)) => format!("D {}", reason.code()),
                 Ok(Reply::Stale) => "S".to_string(),
                 Err(ServiceError::Ledger(e)) => format!("E {e:?}"),
                 Err(e) => format!("E {e:?}"),
@@ -278,7 +303,11 @@ impl TcpClient {
                 .parse::<u64>()
                 .map(|fee| Reply::Committed { fee })
                 .map_err(|_| ServiceError::Protocol(format!("bad fee in `{line}`"))),
-            None if line == "D" => Ok(Reply::Denied),
+            // A bare `D` comes from a server that predates reason codes.
+            None if line == "D" => Ok(Reply::Denied(DenyReason::Unclassified)),
+            Some(("D", code)) => Ok(Reply::Denied(
+                DenyReason::from_code(code).unwrap_or(DenyReason::Unclassified),
+            )),
             None if line == "S" => Ok(Reply::Stale),
             Some(("E", msg)) => Err(ServiceError::Protocol(msg.to_string())),
             _ => Err(ServiceError::Protocol(format!(
@@ -341,7 +370,10 @@ mod tests {
             client.submit(1, 2, 400).unwrap(),
             Reply::Committed { fee: 0 }
         );
-        assert_eq!(client.submit(1, 2, 700).unwrap(), Reply::Denied);
+        assert_eq!(
+            client.submit(1, 2, 700).unwrap(),
+            Reply::Denied(DenyReason::InsufficientBalance)
+        );
 
         // Garbage gets an error reply, and the connection stays usable.
         writeln!(client.writer, "T nope 2 3").unwrap();
@@ -351,6 +383,26 @@ mod tests {
         assert_eq!(
             client.submit(1, 2, 100).unwrap(),
             Reply::Committed { fee: 0 }
+        );
+    }
+
+    #[test]
+    fn bare_d_from_an_older_server_parses_as_unclassified() {
+        // A stub server that answers the old way: a bare `D`, with no reason code.
+        let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+        let addr = listener.local_addr().unwrap();
+        thread::spawn(move || {
+            let (mut s, _) = listener.accept().unwrap();
+            let mut req = String::new();
+            BufReader::new(s.try_clone().unwrap())
+                .read_line(&mut req)
+                .unwrap();
+            writeln!(s, "D").unwrap();
+        });
+        let mut client = TcpClient::connect(addr).unwrap();
+        assert_eq!(
+            client.submit(1, 2, 3).unwrap(),
+            Reply::Denied(DenyReason::Unclassified)
         );
     }
 

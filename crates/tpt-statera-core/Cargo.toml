@@ -9,14 +9,25 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
 readme = "README.md"
 keywords = ["ledger", "conservation", "validation", "no-std", "finance"]
 categories = ["no-std", "finance"]
 publish = false
 
+[features]
+# Off by default, so the default build has zero dependencies (`no_std` posture, todo 1A.05).
+serde = ["dep:serde"]
+
 [dependencies]
-# Zero runtime dependencies: `no_std` posture (todo 1A.05). Arithmetic is
-# hand-rolled over u128/i128 with explicit checks (todo 1A.04).
+# Arithmetic is hand-rolled over u128/i128 with explicit checks (todo 1A.04).
+# Optional serialization (todo 5B.03). Only pulled in with `--features serde`.
+serde = { version = "1", default-features = false, features = ["derive"], optional = true }
+
+[dev-dependencies]
+# Used only by the `serde` feature tests. Not a runtime dependency.
+serde_json = "1"
 
 [lints]
 workspace = true

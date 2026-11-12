@@ -9,8 +9,9 @@
 //!
 //! * [`validate_transfer`] validates **one proposal against one snapshot** of
 //!   [`SystemState`]. It does **not** provide atomicity. Callers must serialize
-//!   validation-and-commit per account (spec §8, Assumption 2). The runtime
-//!   crate that would enforce this is out of scope for Phase 1.
+//!   validation-and-commit per account (spec §8, Assumption 2). The in-process
+//!   `tpt-statera-runtime` crate enforces this for its own ledger; other hosts must
+//!   provide their own serialization.
 //! * `fee_rate_bps <= 10_000` and `sender_balance >= amount` are *trusted-input
 //!   boundaries* (spec §8, Assumption 3). The function fails closed on both,
 //!   but these are caller obligations, not guarantees the function discharges.
@@ -25,18 +26,42 @@
 //!
 //! ## `no_std` posture (todo 1A.05)
 //!
-//! This crate is `#![no_std]` with zero dependencies and no allocation, so it can
-//! be compiled for `wasm32` and CosmWasm-style hosts.
+//! This crate is `#![no_std]` with no default dependencies and no allocation, so it can
+//! be compiled for `wasm32` and CosmWasm-style hosts. The optional `serde` feature (off by default)
+//! adds serialization for the public types and keeps the same `no_std` posture.
+//!
+//! ## Getting started
+//!
+//! ```
+//! use tpt_statera_core::prelude::*;
+//!
+//! let state = SystemState::new(1_000, 0, 0);
+//! let proposal = TransferProposal::new(500, 100); // 500 units at 1%
+//! match validate_transfer_explained(state, proposal) {
+//!     Ok(outcome) => println!("{outcome}"),
+//!     Err(reason) => println!("denied: {reason}"),
+//! }
+//! ```
 
 #![no_std]
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod explain;
 pub mod netting;
 pub mod transfer_validator;
 pub mod vesting;
 
+pub use explain::{validate_transfer_explained, DenyReason};
 pub use transfer_validator::{validate_transfer, SystemState, TransferProposal, ValidationOutcome};
+
+/// The names most callers need, in one import: `use tpt_statera_core::prelude::*;`.
+pub mod prelude {
+    pub use crate::explain::{validate_transfer_explained, DenyReason};
+    pub use crate::transfer_validator::{
+        validate_transfer, SystemState, TransferProposal, ValidationOutcome,
+    };
+}
 
 /// Basis-point denominator: `10_000 bps == 100%`.
 pub const BPS_DENOMINATOR: u128 = 10_000;

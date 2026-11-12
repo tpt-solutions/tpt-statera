@@ -19,10 +19,16 @@
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
 
-use tpt_statera_core::BPS_DENOMINATOR;
+use std::fmt;
+
+use tpt_statera_core::{
+    validate_transfer, SystemState, TransferProposal, ValidationOutcome, BPS_DENOMINATOR,
+};
 
 /// Rounding mode for the fee computation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum RoundingMode {
     /// Round toward zero. Dust is non-negative.
     Floor,
@@ -34,6 +40,8 @@ pub enum RoundingMode {
 
 /// Where the sub-unit rounding remainder is routed. Mandatory for every policy.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "snake_case"))]
 pub enum DustDestination {
     /// The remainder stays with the sender (never debited).
     SenderRetains,
@@ -73,11 +81,76 @@ pub enum PolicyError {
     SharesNotExact(u128),
 }
 
+impl fmt::Display for PolicyError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PolicyError::ModeNotPermitted(m) => {
+                write!(f, "rounding mode {m:?} is not permitted in this release")
+            }
+            PolicyError::DestinationNotValid(m, d) => {
+                write!(f, "dust destination {d:?} is not valid for {m:?}")
+            }
+            PolicyError::Overflow => f.write_str("fee computation does not fit in u64"),
+            PolicyError::FeeRateOutOfRange => f.write_str("fee rate exceeds 10000 bps"),
+            PolicyError::NoTiers => f.write_str("tier schedule has no tiers"),
+            PolicyError::FirstTierNotZero => f.write_str("the first tier must start at amount 0"),
+            PolicyError::TiersNotIncreasing => {
+                f.write_str("tier thresholds must be strictly increasing")
+            }
+            PolicyError::ZeroShare => f.write_str("a non-treasury share must be positive"),
+            PolicyError::SharesNotExact(sum) => {
+                write!(f, "shares must sum to 10000 bps, got {sum}")
+            }
+        }
+    }
+}
+
+impl std::error::Error for PolicyError {}
+
 pub mod split;
 pub mod tiers;
 
 pub use split::{Division, FeeShares, Share};
 pub use tiers::{FeeTiers, Tier};
+
+/// The result of [`validate_with_policy`].
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct PolicyDecision {
+    /// The tier rate that was applied, in basis points.
+    pub fee_rate_bps: u64,
+    /// The core validator's outcome at that rate.
+    pub outcome: ValidationOutcome,
+    /// On `Allow`: how the rounded fee is divided among recipients. `None` on `Deny`.
+    ///
+    /// The core validator credits the whole fee to the treasury. The caller must move the
+    /// non-treasury `parts` out of that credit, because `SystemState` has only one treasury balance.
+    pub fee_split: Option<Division>,
+}
+
+/// Validate a transfer with the fee rate taken from a tier schedule, then divide the fee.
+///
+/// The tier is selected by `amount`. The core validator runs unchanged at that rate. On `Allow`,
+/// the rounded fee is divided by `shares`. The parts always sum to the fee (`policy_split.telos`).
+/// Fails with a [`PolicyError`] only if the division itself fails, which cannot happen for
+/// validated `FeeShares` and a fee at most `u64::MAX`.
+pub fn validate_with_policy(
+    state: SystemState,
+    amount: u64,
+    tiers: &FeeTiers,
+    shares: &FeeShares,
+) -> Result<PolicyDecision, PolicyError> {
+    let fee_rate_bps = tiers.rate_for(amount);
+    let outcome = validate_transfer(state, TransferProposal::new(amount, fee_rate_bps));
+    let fee_split = match outcome {
+        ValidationOutcome::Allow { rounded_fee, .. } => Some(shares.divide(rounded_fee)?),
+        ValidationOutcome::Deny => None,
+    };
+    Ok(PolicyDecision {
+        fee_rate_bps,
+        outcome,
+        fee_split,
+    })
+}
 
 /// The result of applying a policy to one fee.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

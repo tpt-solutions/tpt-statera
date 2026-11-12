@@ -29,9 +29,12 @@
 pub mod service;
 
 use std::collections::{BTreeMap, BTreeSet};
+use std::fmt;
 use std::sync::{Mutex, MutexGuard};
 
-use tpt_statera_core::{validate_transfer, SystemState, TransferProposal, ValidationOutcome};
+use tpt_statera_core::{
+    validate_transfer_explained, DenyReason, SystemState, TransferProposal, ValidationOutcome,
+};
 
 /// Account identifier.
 pub type AccountId = u64;
@@ -50,13 +53,25 @@ pub enum LedgerError {
     Poisoned,
 }
 
+impl fmt::Display for LedgerError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            LedgerError::UnknownAccount(id) => write!(f, "unknown account {id}"),
+            LedgerError::SelfTransfer => f.write_str("sender and recipient must differ"),
+            LedgerError::Poisoned => f.write_str("account lock poisoned; failing closed"),
+        }
+    }
+}
+
+impl std::error::Error for LedgerError {}
+
 /// The result of a submitted transfer.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Submission {
     /// The transfer was validated and committed.
     Committed(ValidationOutcome),
-    /// The transfer was denied by validation. No state changed.
-    Denied,
+    /// The transfer was denied by validation, with the first failing check. No state changed.
+    Denied(DenyReason),
     /// A snapshot version changed before commit. No state changed. The caller may resubmit.
     Stale,
 }
@@ -149,11 +164,8 @@ impl Ledger {
         };
         let versions = (s.version, r.version, t.version);
 
-        let proposal = TransferProposal {
-            amount,
-            fee_rate_bps: self.fee_rate_bps,
-        };
-        let outcome = validate_transfer(state, proposal);
+        let proposal = TransferProposal::new(amount, self.fee_rate_bps);
+        let result = validate_transfer_explained(state, proposal);
 
         // Re-check versions before committing. Under the lock they cannot change, so this
         // guards against a future change that reads outside the lock (2B.03).
@@ -166,19 +178,22 @@ impl Ledger {
             return Ok(Submission::Stale);
         }
 
-        match outcome {
-            ValidationOutcome::Allow {
-                new_sender_balance,
-                new_recipient_balance,
-                new_treasury_balance,
-                ..
-            } => {
-                commit(&mut locks, sender, new_sender_balance);
-                commit(&mut locks, recipient, new_recipient_balance);
-                commit(&mut locks, TREASURY, new_treasury_balance);
+        match result {
+            Ok(outcome) => {
+                if let ValidationOutcome::Allow {
+                    new_sender_balance,
+                    new_recipient_balance,
+                    new_treasury_balance,
+                    ..
+                } = outcome
+                {
+                    commit(&mut locks, sender, new_sender_balance);
+                    commit(&mut locks, recipient, new_recipient_balance);
+                    commit(&mut locks, TREASURY, new_treasury_balance);
+                }
                 Ok(Submission::Committed(outcome))
             }
-            ValidationOutcome::Deny => Ok(Submission::Denied),
+            Err(reason) => Ok(Submission::Denied(reason)),
         }
     }
 }
@@ -219,7 +234,10 @@ mod tests {
     #[test]
     fn denied_transfer_changes_nothing() {
         let l = Ledger::new(&[(1, 10), (2, 0)], 0);
-        assert_eq!(l.submit(1, 2, 11).unwrap(), Submission::Denied);
+        assert_eq!(
+            l.submit(1, 2, 11).unwrap(),
+            Submission::Denied(DenyReason::InsufficientBalance)
+        );
         assert_eq!(l.balance(1).unwrap(), 10);
         assert_eq!(l.balance(2).unwrap(), 0);
     }

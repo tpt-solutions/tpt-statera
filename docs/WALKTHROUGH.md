@@ -38,7 +38,7 @@ use tpt_statera_runtime::{Ledger, Submission};
 let ledger = Ledger::new(&[(1, 1_000_000), (2, 0)], 15);
 match ledger.submit(1, 2, 500)? {
     Submission::Committed(outcome) => { /* record outcome */ }
-    Submission::Denied => { /* no state changed; report to the user */ }
+    Submission::Denied(reason) => { /* no state changed; reason is a DenyReason, e.g. InsufficientBalance */ }
     Submission::Stale => { /* a version moved; resubmit if you want */ }
 }
 ```

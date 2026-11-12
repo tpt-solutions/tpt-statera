@@ -7,6 +7,8 @@ use crate::BPS_DENOMINATOR;
 
 /// The proposed financial action.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct TransferProposal {
     /// The exact amount the recipient should receive.
     pub amount: u64,
@@ -14,8 +16,20 @@ pub struct TransferProposal {
     pub fee_rate_bps: u64,
 }
 
+impl TransferProposal {
+    /// A proposal for `amount` at `fee_rate_bps`. Arguments are positional: `(amount, fee_rate_bps)`.
+    pub const fn new(amount: u64, fee_rate_bps: u64) -> Self {
+        Self {
+            amount,
+            fee_rate_bps,
+        }
+    }
+}
+
 /// Snapshot of the balances of the involved parties.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct SystemState {
     /// Sender balance before the transfer.
     pub sender_balance: u64,
@@ -25,8 +39,20 @@ pub struct SystemState {
     pub treasury_balance: u64,
 }
 
+impl SystemState {
+    /// A snapshot. Arguments are positional: `(sender, recipient, treasury)`.
+    pub const fn new(sender_balance: u64, recipient_balance: u64, treasury_balance: u64) -> Self {
+        Self {
+            sender_balance,
+            recipient_balance,
+            treasury_balance,
+        }
+    }
+}
+
 /// Result of validation, including explicit dust accounting.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum ValidationOutcome {
     /// The transfer is allowed. All post-state balances are included.
     Allow {

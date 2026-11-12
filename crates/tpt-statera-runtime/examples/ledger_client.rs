@@ -34,7 +34,7 @@ fn main() {
     for (from, to, amount) in requests {
         match client.submit(from, to, amount) {
             Ok(Reply::Committed { fee }) => println!("{from}->{to} {amount}: committed, fee {fee}"),
-            Ok(Reply::Denied) => println!("{from}->{to} {amount}: denied"),
+            Ok(Reply::Denied(reason)) => println!("{from}->{to} {amount}: denied ({reason})"),
             Ok(Reply::Stale) => println!("{from}->{to} {amount}: stale, resubmit"),
             Err(e) => println!("{from}->{to} {amount}: error {e:?}"),
         }

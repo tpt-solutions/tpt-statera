@@ -13,6 +13,8 @@ const BPS: u128 = 10_000;
 
 /// A non-treasury recipient and its share.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct Share {
     /// Recipient account id.
     pub account: u64,
@@ -22,10 +24,46 @@ pub struct Share {
 
 /// A validated split: a treasury share plus any number of other recipients.
 /// The shares sum to exactly 10 000.
+///
+/// With the `serde` feature, deserialization runs the same checks as [`FeeShares::new`].
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(
+    feature = "serde",
+    serde(try_from = "FeeSharesRaw", into = "FeeSharesRaw")
+)]
 pub struct FeeShares {
     treasury_bps: u64,
     others: Vec<Share>,
+}
+
+/// Unvalidated wire form of [`FeeShares`]. Converted with the checks in [`FeeShares::new`].
+#[cfg(feature = "serde")]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FeeSharesRaw {
+    /// Treasury share, in basis points.
+    pub treasury_bps: u64,
+    /// Other recipients.
+    pub others: Vec<Share>,
+}
+
+#[cfg(feature = "serde")]
+impl TryFrom<FeeSharesRaw> for FeeShares {
+    type Error = PolicyError;
+    fn try_from(r: FeeSharesRaw) -> Result<Self, PolicyError> {
+        FeeShares::new(r.treasury_bps, r.others)
+    }
+}
+
+#[cfg(feature = "serde")]
+impl From<FeeShares> for FeeSharesRaw {
+    fn from(s: FeeShares) -> Self {
+        FeeSharesRaw {
+            treasury_bps: s.treasury_bps,
+            others: s.others,
+        }
+    }
 }
 
 /// The result of dividing one fee. `treasury` already includes the rounding remainder.

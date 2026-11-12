@@ -15,7 +15,7 @@ under the account locks, with the versions unchanged.
    compiler enforces this (`#![deny(unsafe_code)]` and private visibility). There is no `unsafe` in the
    runtime that could reach the field.
 2. **`submit` commits only on `Allow`.** The commit branch is reached only from
-   `ValidationOutcome::Allow`. `Deny` returns `Submission::Denied` with no write. `Stale` returns with no
+   `ValidationOutcome::Allow`. `Deny` returns `Submission::Denied(reason)` with no write. `Stale` returns with no
    write. The versions are checked before the write, under the same locks.
 3. **Locks cover the whole read-validate-write.** The snapshot and the writes happen while the locks for
    the sender, recipient and treasury are held. Because the lock order is fixed, two submissions that share

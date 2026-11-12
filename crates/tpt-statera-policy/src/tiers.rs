@@ -10,6 +10,8 @@ use crate::PolicyError;
 
 /// One tier: transfers of at least `min_amount` pay `fee_rate_bps`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(deny_unknown_fields))]
 pub struct Tier {
     /// Smallest transfer amount this tier applies to, in whole units.
     pub min_amount: u64,
@@ -18,9 +20,27 @@ pub struct Tier {
 }
 
 /// A validated tier schedule.
+///
+/// With the `serde` feature, it (de)serializes as a list of tiers. Deserialization runs the same
+/// checks as [`FeeTiers::new`], so an invalid file cannot produce a schedule.
 #[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+#[cfg_attr(feature = "serde", serde(try_from = "Vec<Tier>", into = "Vec<Tier>"))]
 pub struct FeeTiers {
     tiers: Vec<Tier>,
+}
+
+impl TryFrom<Vec<Tier>> for FeeTiers {
+    type Error = PolicyError;
+    fn try_from(tiers: Vec<Tier>) -> Result<Self, PolicyError> {
+        FeeTiers::new(tiers)
+    }
+}
+
+impl From<FeeTiers> for Vec<Tier> {
+    fn from(t: FeeTiers) -> Self {
+        t.tiers
+    }
 }
 
 impl FeeTiers {

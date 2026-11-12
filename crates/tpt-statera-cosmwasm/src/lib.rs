@@ -29,7 +29,9 @@ use cosmwasm_std::{
 };
 use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use tpt_statera_core::{validate_transfer, SystemState, TransferProposal, ValidationOutcome};
+use tpt_statera_core::{
+    validate_transfer_explained, DenyReason, SystemState, TransferProposal, ValidationOutcome,
+};
 
 /// Storage key prefix for balances.
 const BAL_PREFIX: &[u8] = b"bal:";
@@ -42,9 +44,9 @@ pub enum ContractError {
     /// A standard CosmWasm error (address validation, serialization, storage).
     #[error("{0}")]
     Std(#[from] StdError),
-    /// `validate_transfer` returned `Deny`. No state was written.
-    #[error("transfer denied by validation")]
-    Denied,
+    /// `validate_transfer` denied the transfer, for the reason given. No state was written.
+    #[error("transfer denied by validation: {0}")]
+    Denied(DenyReason),
     /// Sender and recipient are the same account.
     #[error("sender and recipient must differ")]
     SelfTransfer,
@@ -216,25 +218,18 @@ fn transfer(
     let r = load_balance(deps.storage, &recipient)?;
     let t = load_balance(deps.storage, &config.treasury)?;
 
-    let outcome = validate_transfer(
-        SystemState {
-            sender_balance: s,
-            recipient_balance: r,
-            treasury_balance: t,
-        },
-        TransferProposal {
-            amount,
-            fee_rate_bps: config.fee_rate_bps,
-        },
+    let outcome = validate_transfer_explained(
+        SystemState::new(s, r, t),
+        TransferProposal::new(amount, config.fee_rate_bps),
     );
     match outcome {
-        ValidationOutcome::Allow {
+        Ok(ValidationOutcome::Allow {
             new_sender_balance,
             new_recipient_balance,
             new_treasury_balance,
             rounded_fee,
             dust_retained_by_sender,
-        } => {
+        }) => {
             store_balance(deps.storage, &sender, new_sender_balance);
             store_balance(deps.storage, &recipient, new_recipient_balance);
             store_balance(deps.storage, &config.treasury, new_treasury_balance);
@@ -250,7 +245,8 @@ fn transfer(
                 ))
         }
         // Returning an error reverts the message, so nothing above is persisted.
-        ValidationOutcome::Deny => Err(ContractError::Denied),
+        Ok(ValidationOutcome::Deny) => Err(ContractError::Denied(DenyReason::Unclassified)),
+        Err(reason) => Err(ContractError::Denied(reason)),
     }
 }
 
@@ -364,7 +360,10 @@ mod tests {
     fn denied_transfer_errors_and_writes_nothing() {
         let mut deps = init(0);
         let err = transfer_msg(deps.as_mut(), "bob", "alice", 1).unwrap_err();
-        assert!(matches!(err, ContractError::Denied));
+        assert!(matches!(
+            err,
+            ContractError::Denied(DenyReason::InsufficientBalance)
+        ));
         assert_eq!(balance(deps.as_ref(), "bob"), 0);
         assert_eq!(balance(deps.as_ref(), "alice"), 1_000_000);
     }
