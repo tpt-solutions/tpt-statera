@@ -30,3 +30,9 @@ thiserror = "2"
 
 [lints]
 workspace = true
+
+[dev-dependencies]
+# Multi-contract simulator (executes messages as CosmWasm does, including the revert on error).
+# Pinned exactly. 3.0.1 was published 2025-07-04.
+cw-multi-test = "=3.0.1"
+
