@@ -60,3 +60,19 @@ jobs:
       - name: Build CosmWasm contract for wasm32 (release)
         run: cargo build -p tpt-statera-cosmwasm --target wasm32-unknown-unknown --release
 
+  cosmwasm-check:
+    # Runs the official CosmWasm contract checker on the built contract. cosmwasm-check does not build
+    # on Windows (wasmer singlepass), which is why it runs here on Linux. NOT YET RUN on GitHub.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - name: Build the contract
+        run: cargo build -p tpt-statera-cosmwasm --target wasm32-unknown-unknown --release
+      - name: Install cosmwasm-check (pinned to the cosmwasm-std version)
+        run: cargo install cosmwasm-check --version "=3.0.11" --locked
+      - name: Check the contract
+        run: cosmwasm-check target/wasm32-unknown-unknown/release/tpt_statera_cosmwasm.wasm
+
