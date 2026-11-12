@@ -61,7 +61,23 @@ pub enum PolicyError {
     Overflow,
     /// The fee rate exceeds 100% (10 000 bps).
     FeeRateOutOfRange,
+    /// A tier schedule has no tiers.
+    NoTiers,
+    /// The first tier must start at amount 0, so that every amount has a tier.
+    FirstTierNotZero,
+    /// Tier thresholds must be strictly increasing.
+    TiersNotIncreasing,
+    /// A non-treasury share must be positive.
+    ZeroShare,
+    /// The shares do not sum to 10 000 bps. Carries the sum that was given.
+    SharesNotExact(u128),
 }
+
+pub mod split;
+pub mod tiers;
+
+pub use split::{Division, FeeShares, Share};
+pub use tiers::{FeeTiers, Tier};
 
 /// The result of applying a policy to one fee.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
