@@ -26,6 +26,8 @@
 #![deny(unsafe_code)]
 #![warn(missing_docs)]
 
+pub mod service;
+
 use std::collections::{BTreeMap, BTreeSet};
 use std::sync::{Mutex, MutexGuard};
 
