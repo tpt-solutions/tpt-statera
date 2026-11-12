@@ -9,6 +9,9 @@ edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
 authors.workspace = true
+readme = "README.md"
+keywords = ["ledger", "conservation", "validation", "no-std", "finance"]
+categories = ["no-std", "finance"]
 publish = false
 
 [dependencies]

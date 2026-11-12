@@ -33,8 +33,9 @@ All notable changes. Claims in this file stay inside the spec §7 caveat and `TH
 - Cross-process service uses a shared token but no TLS. Use it on loopback or a private network only.
 - The CosmWasm adapter has not run on a live chain.
 
-- The solver does not prove disjunctive clauses (upper rounding bound, overflow denial, restated
-  denial), so these are Rust-tested only. Vesting is not proven.
+- The Fourier–Motzkin solver does not prove disjunctive clauses (upper rounding bound, overflow denial,
+  restated denial). Under `--solver z3` the full model proves them. Vesting is proven under Z3 for one
+  claim and two claims over time; more than two claims is by induction, not checked.
 - Serialization is in-process only. Host-level bypass is not mitigated.
 - The threat-model sign-off is not recorded.
 - Certificate mappings are stubs. The certificate is illustrative.
