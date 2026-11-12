@@ -1,0 +1,122 @@
+{
+  "caveat": "Phase 1's \"first-draft Proof Certificate\" is an illustrative artifact demonstrating the certificate format and workflow. It is not, by itself, a compliance claim, does not cover concurrent-access or multi-party netting scenarios (Section 8), and should not be represented to customers or auditors as a completed regulatory mapping until Phase 2 is delivered and Phase 3's independent audit has occurred.",
+  "claims": [
+    {
+      "description": "ensures: sender.balance + recipient.balance + treasury.balance == old(sender.balance) + old(recipient.balance) + old(treasury.balance)",
+      "function": "validate",
+      "line": 62,
+      "path_instances": 6,
+      "proof_id": "TSC-9ccd90b1-001",
+      "result": "PASS",
+      "source": "proofs/transfer_validator.telos",
+      "transcript": "proofs/transcripts/transfer_validator.json"
+    },
+    {
+      "description": "ensures: sender.balance >= 0",
+      "function": "validate",
+      "line": 65,
+      "path_instances": 6,
+      "proof_id": "TSC-9ccd90b1-002",
+      "result": "PASS",
+      "source": "proofs/transfer_validator.telos",
+      "transcript": "proofs/transcripts/transfer_validator.json"
+    },
+    {
+      "description": "ensures: sender.balance <= old(sender.balance)",
+      "function": "validate",
+      "line": 67,
+      "path_instances": 6,
+      "proof_id": "TSC-9ccd90b1-003",
+      "result": "PASS",
+      "source": "proofs/transfer_validator.telos",
+      "transcript": "proofs/transcripts/transfer_validator.json"
+    },
+    {
+      "description": "ensures: recipient.balance >= old(recipient.balance)",
+      "function": "validate",
+      "line": 68,
+      "path_instances": 6,
+      "proof_id": "TSC-9ccd90b1-004",
+      "result": "PASS",
+      "source": "proofs/transfer_validator.telos",
+      "transcript": "proofs/transcripts/transfer_validator.json"
+    },
+    {
+      "description": "ensures: treasury.balance >= old(treasury.balance)",
+      "function": "validate",
+      "line": 69,
+      "path_instances": 6,
+      "proof_id": "TSC-9ccd90b1-005",
+      "result": "PASS",
+      "source": "proofs/transfer_validator.telos",
+      "transcript": "proofs/transcripts/transfer_validator.json"
+    },
+    {
+      "description": "ensures: treasury.balance - old(treasury.balance) * 10000 <= numer",
+      "function": "validate",
+      "line": 72,
+      "path_instances": 6,
+      "proof_id": "TSC-9ccd90b1-006",
+      "result": "PASS",
+      "source": "proofs/transfer_validator.telos",
+      "transcript": "proofs/transcripts/transfer_validator.json"
+    },
+    {
+      "description": "invariant Account maintained: sender.balance >= 0",
+      "function": "validate",
+      "line": 44,
+      "path_instances": 6,
+      "proof_id": "TSC-9ccd90b1-007",
+      "result": "PASS",
+      "source": "proofs/transfer_validator.telos",
+      "transcript": "proofs/transcripts/transfer_validator.json"
+    },
+    {
+      "description": "invariant Account maintained: recipient.balance >= 0",
+      "function": "validate",
+      "line": 44,
+      "path_instances": 6,
+      "proof_id": "TSC-9ccd90b1-008",
+      "result": "PASS",
+      "source": "proofs/transfer_validator.telos",
+      "transcript": "proofs/transcripts/transfer_validator.json"
+    },
+    {
+      "description": "invariant Account maintained: treasury.balance >= 0",
+      "function": "validate",
+      "line": 44,
+      "path_instances": 6,
+      "proof_id": "TSC-9ccd90b1-009",
+      "result": "PASS",
+      "source": "proofs/transfer_validator.telos",
+      "transcript": "proofs/transcripts/transfer_validator.json"
+    },
+    {
+      "description": "invariant Account maintained: status.balance >= 0",
+      "function": "validate",
+      "line": 44,
+      "path_instances": 6,
+      "proof_id": "TSC-9ccd90b1-010",
+      "result": "PASS",
+      "source": "proofs/transfer_validator.telos",
+      "transcript": "proofs/transcripts/transfer_validator.json"
+    }
+  ],
+  "control_mappings": {
+    "MiCA Article 51 (Asset safeguarding)": "mapping pending Phase 2",
+    "SOC2 CC6.1 (Logical Access Security)": "mapping pending Phase 2"
+  },
+  "inputs": [
+    {
+      "path": "proofs/transfer_validator.telos",
+      "sha256": "9ccd90b1320cc383678b4b37984337d532811b7097b6cdac39549a18673e2c99"
+    }
+  ],
+  "overall": "PASS",
+  "schema": "tpt-statera.proof-certificate/0.1-draft",
+  "scope": "validate_transfer: linear conservation core under the Floor-fee specification; not multi-party netting; disjunctive clauses excluded (see proofs/README.md)",
+  "status": "ILLUSTRATIVE",
+  "toolchain": {
+    "solver": "tpt-telos verify (built-in Fourier-Motzkin)"
+  }
+}

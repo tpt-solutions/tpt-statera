@@ -1,0 +1,57 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) 2026 TPT Solutions
+//
+// tpt-statera — composition of two sequential transfers (todo 2C.03, partial).
+//
+// Spec §8 notes that single-transition proofs do not, by themselves, give
+// portfolio-level conservation. This file composes two linear transfer steps in one
+// function and proves that conservation holds across the composition.
+//
+// SCOPE:
+//   * Two steps only. Composition over N steps is the same argument by induction, which is
+//     not checked by the solver here.
+//   * Each step uses the linear transfer core from transfer_validator.telos. The fee is a
+//     parameter. The Floor formula and the disjunctive clauses are not in scope (AD-6).
+//   * Account `status` is not used. Deny paths are not composed here.
+//   * The proof is of the NET effect of the two steps. Step 2's solvency is a requires
+//     on step 1's result, so validation order is captured. The sequential execution order
+//     is not modelled as separate mutations.
+//
+// Verified: `telos verify proofs/composition_two_transfers.telos`
+
+@boundary(cpu_bound)
+@state(persistent)
+module CompositionTwoTransfers {
+    invariant Account {
+        balance >= 0
+    }
+
+    func two_steps(mut a: Account, mut b: Account, mut c: Account,
+                   amount1: Int, fee1: Int, amount2: Int, fee2: Int)
+        requires amount1 >= 0
+        requires fee1 >= 0
+        requires amount2 >= 0
+        requires fee2 >= 0
+        requires a.balance >= amount1 + fee1
+        requires b.balance + amount1 >= 0
+        requires c.balance + fee1 >= 0
+        // Step 2 is validated against the state step 1 produces, so its solvency
+        // requirement is stated on that state (expressed in pre-state terms).
+        requires b.balance + amount1 >= amount2 + fee2
+        requires c.balance + fee1 + fee2 >= 0
+        ensures a.balance + b.balance + c.balance
+                == old(a.balance) + old(b.balance) + old(c.balance)
+        ensures a.balance >= 0
+        ensures b.balance >= 0
+        ensures c.balance >= 0
+    {
+        // One mutate block, each balance assigned once, carrying the net effect of both steps.
+        // Two blocks that assign the same variable are NOT used: the verifier's handling of
+        // repeated assignments is unreliable (negative controls passed when they should fail).
+        mutate state {
+            a.balance = old(a.balance) - amount1 - fee1 + amount2;
+            b.balance = old(b.balance) + amount1 - amount2 - fee2;
+            c.balance = old(c.balance) + fee1 + fee2;
+        }
+    }
+}

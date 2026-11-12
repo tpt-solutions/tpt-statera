@@ -1,0 +1,91 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) 2026 TPT Solutions
+//
+// tpt-statera — linear-arithmetic model of validate_transfer (todo 1C.01, 1C.02, 1C.03,
+// 1D.01, 1D.02, 1D.03). Supersedes the abstract-fee model in transfer_conservation.telos.
+//
+// ENCODING. The Floor fee is `fee = floor(numer / 10000)` with `numer = amount * bps`.
+//   * `numer` is a parameter. The product amount*bps is bilinear and is NOT discharged by
+//     the Fourier-Motzkin solver. It is supplied by the caller and is definitional.
+//   * `fee` is a parameter constrained by the Floor specification, which is linear in
+//     (fee, numer):   fee*10000 <= numer < fee*10000 + 10000.
+//     This characterizes floor uniquely, so the proof covers the Floor fee.
+//   * `status` is an Account whose balance is 1 on Allow and 0 on Deny. It makes the
+//     result observable to `ensures` clauses, which cannot refer to a return value.
+//   * The ideal (exact rational) fee is numer/10000. Ideal comparisons are multiplied
+//     by 10000, so they stay linear.
+//
+// PROVED (linear, FM solver):
+//   E1 strict conservation: pre_sum == post_sum on both Allow and Deny
+//   E2 no overdraft: sender_post >= 0
+//   E3 directionality: sender never increases, recipient and treasury never decrease
+//   E5a never-overcharge half of bounded rounding (1D.01): credited fee*10000 <= numer
+//
+// NOT PROVED IN TELOS (checked by tpt-statera-core Rust tests instead), because they need
+// disjunctive ensures (`A || B`, `A ==> B`):
+//   * Deny is a no-op (status == 0 implies balances unchanged)
+//   * upper half of 1D.01: numer < credited*10000 + 10000 on Allow
+//   * overflow denial (1D.03)
+//   * restated conservative denial (1D.02, AD-5)
+// The telos disjunction handling was checked with a negative control (removing the
+// overflow guard): the model still reported PASS. That result is unsound, so no
+// disjunctive ensures are trusted from this solver version. See proofs/README.md.
+//
+// NOT PROVED HERE: the fee formula itself (it is the floor spec, a requires).
+//   The `requires` on fee and numer are the Floor specification, not a derivation.
+//   Discharging `numer == amount*bps` needs Z3 (`telos verify --solver z3`) and remains open.
+//
+// Verified: `telos verify proofs/transfer_validator.telos`
+
+@boundary(cpu_bound)
+@state(persistent)
+module TransferValidator {
+    invariant Account {
+        balance >= 0
+    }
+
+    func validate(mut sender: Account, mut recipient: Account, mut treasury: Account,
+                  mut status: Account,
+                  amount: Int, bps: Int, numer: Int, fee: Int, cap: Int)
+        requires amount >= 0
+        requires bps >= 0
+        requires numer >= 0
+        requires fee >= 0
+        requires cap >= 0
+        requires fee * 10000 <= numer
+        requires numer < fee * 10000 + 10000
+        requires sender.balance >= 0
+        requires recipient.balance >= 0
+        requires treasury.balance >= 0
+        requires status.balance == 0
+        // E1 strict conservation (both outcomes)
+        ensures sender.balance + recipient.balance + treasury.balance
+                == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+        // E2 no overdraft
+        ensures sender.balance >= 0
+        // E3 directionality
+        ensures sender.balance <= old(sender.balance)
+        ensures recipient.balance >= old(recipient.balance)
+        ensures treasury.balance >= old(treasury.balance)
+        // E5a never overcharge: the credited fee never exceeds the ideal fee (scaled by 10000).
+        //     Holds on both outcomes (Deny credits nothing).
+        ensures (treasury.balance - old(treasury.balance)) * 10000 <= numer
+    {
+        if bps <= 10000 {
+            if sender.balance >= amount {
+                if sender.balance >= amount + fee {
+                    if old(recipient.balance) + amount <= cap {
+                        if old(treasury.balance) + fee <= cap {
+                            mutate state {
+                                sender.balance = old(sender.balance) - amount - fee;
+                                recipient.balance = old(recipient.balance) + amount;
+                                treasury.balance = old(treasury.balance) + fee;
+                                status.balance = 1;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

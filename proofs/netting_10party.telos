@@ -1,0 +1,61 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) 2026 TPT Solutions
+//
+// tpt-statera — multi-party netting, 10 parties (todo 1C.05 partial, EC4).
+//
+// Linear model: the settlement applies a zero-sum set of deltas d0..d9 to
+// balances b0..b9. Proves that total value is conserved and no party goes negative.
+//
+// SCOPE: the constraint-orthogonality assumption (todo 1C.05) is NOT discharged here.
+// It is a modelling assumption about how the 10 delta constraints interact. It is
+// documented in proofs/README.md with its justification, and is not an output of
+// this solver run.
+//
+// Verified: `telos verify proofs/netting_10party.telos`
+
+@boundary(cpu_bound)
+@state(persistent)
+module NettingTenParty {
+    invariant Account {
+        balance >= 0
+    }
+
+    func settle10(mut b0: Account, mut b1: Account, mut b2: Account, mut b3: Account,
+                  mut b4: Account, mut b5: Account, mut b6: Account, mut b7: Account,
+                  mut b8: Account, mut b9: Account,
+                  d0: Int, d1: Int, d2: Int, d3: Int, d4: Int,
+                  d5: Int, d6: Int, d7: Int, d8: Int, d9: Int)
+        requires d0 + d1 + d2 + d3 + d4 + d5 + d6 + d7 + d8 + d9 == 0
+        requires b0.balance + d0 >= 0
+        requires b1.balance + d1 >= 0
+        requires b2.balance + d2 >= 0
+        requires b3.balance + d3 >= 0
+        requires b4.balance + d4 >= 0
+        requires b5.balance + d5 >= 0
+        requires b6.balance + d6 >= 0
+        requires b7.balance + d7 >= 0
+        requires b8.balance + d8 >= 0
+        requires b9.balance + d9 >= 0
+        ensures b0.balance + b1.balance + b2.balance + b3.balance + b4.balance
+                + b5.balance + b6.balance + b7.balance + b8.balance + b9.balance
+                == old(b0.balance) + old(b1.balance) + old(b2.balance) + old(b3.balance)
+                 + old(b4.balance) + old(b5.balance) + old(b6.balance) + old(b7.balance)
+                 + old(b8.balance) + old(b9.balance)
+        ensures b0.balance >= 0
+        ensures b9.balance >= 0
+    {
+        mutate state {
+            b0.balance = old(b0.balance) + d0;
+            b1.balance = old(b1.balance) + d1;
+            b2.balance = old(b2.balance) + d2;
+            b3.balance = old(b3.balance) + d3;
+            b4.balance = old(b4.balance) + d4;
+            b5.balance = old(b5.balance) + d5;
+            b6.balance = old(b6.balance) + d6;
+            b7.balance = old(b7.balance) + d7;
+            b8.balance = old(b8.balance) + d8;
+            b9.balance = old(b9.balance) + d9;
+        }
+        d0
+    }
+}
