@@ -16,3 +16,5 @@ so the next cycle can start from the reason, not the title.
 | 11 | Certificate mappings beyond stubs | Counsel review | 2C.02, 1F.04 |
 | 12 | Multi-currency ledgers and non-linear vesting | Deferred scope | spec §2, 4.07 |
 | 13 | Generated code returns a function's trailing value | Done for i64 returns in the Rust and Go backends (tpt-telos `bfa9637`), verified by rustc and go build. Other return types are unchanged | telos codegen |
+| 14 | Policy rate limits (per-account, windowed) | Needs a clock source and a per-account counter store in `tpt-statera-runtime`. The validator is stateless, so it cannot hold them (`docs/POLICY_MODEL.md` D3) | 2A.01 |
+| 15 | Policy proportional distribution | Overlaps the netting and vesting proofs; a generic policy rule needs its own proofs first (`docs/POLICY_MODEL.md` D4) | 2A.01 |
