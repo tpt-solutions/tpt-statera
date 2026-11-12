@@ -1,0 +1,19 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Copyright (c) 2026 TPT Solutions
+
+[package]
+name = "tpt-statera-runtime"
+description = "In-process interception layer: serialized validate-and-commit per account (Phase 2B)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+tpt-statera-core = { path = "../tpt-statera-core" }
+tpt-statera-policy = { path = "../tpt-statera-policy" }
+
+[lints]
+workspace = true
