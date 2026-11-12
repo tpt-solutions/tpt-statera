@@ -13,7 +13,12 @@ fn main() {
         .get(1)
         .cloned()
         .unwrap_or_else(|| "127.0.0.1:7878".to_string());
-    let mut client = TcpClient::connect(&addr).expect("connect to ledger_server");
+    let mut client = match std::env::var("TPT_LEDGER_TOKEN") {
+        Ok(token) => {
+            TcpClient::connect_with_token(&addr, &token).expect("connect and authenticate")
+        }
+        Err(_) => TcpClient::connect(&addr).expect("connect to ledger_server"),
+    };
 
     let requests: Vec<(u64, u64, u64)> = if args.len() >= 5 {
         vec![(

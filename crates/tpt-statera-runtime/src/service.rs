@@ -9,8 +9,9 @@
 //!
 //! * In-process clients use [`WriterService`]. It is cheaply cloneable.
 //! * Cross-process clients use [`serve_tcp`] on the server side and [`TcpClient`] on the other
-//!   side. The wire protocol is one line per request and one line per reply. It is plain text and
-//!   has no authentication. Bind to loopback or a private network only (see the scope notes).
+//!   side. The wire protocol is one line per request and one line per reply, in plain text.
+//!   Authentication is a shared token: the first line of every connection must be `AUTH <token>`.
+//!   [`serve_tcp`] refuses to serve on a non-loopback address without a token.
 //!
 //! ## Scope
 //!
@@ -134,23 +135,63 @@ fn run_writer(ledger: Ledger, rx: Receiver<Request>) -> Ledger {
 /// Serve the line protocol on `listener`, forwarding every request to `service`.
 ///
 /// Protocol (each request is one line, each reply is one line):
+/// * `AUTH <token>` must be the first line when a token is set. Reply `OK`, or `E unauthorized`
+///   and the connection closes.
 /// * `T <sender> <recipient> <amount>` → `C <fee>`, `D`, `S`, or `E <message>`
 ///
+/// Refuses to start when `listener` is bound to a non-loopback address and `token` is `None`.
 /// Each connection is handled on its own thread. All writes still go through the single writer.
 /// The function returns only if `listener.accept()` fails.
-pub fn serve_tcp(listener: TcpListener, service: WriterService) -> io::Result<()> {
+pub fn serve_tcp(
+    listener: TcpListener,
+    service: WriterService,
+    token: Option<String>,
+) -> io::Result<()> {
+    if token.is_none() && !listener.local_addr()?.ip().is_loopback() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidInput,
+            "refusing to serve on a non-loopback address without a token",
+        ));
+    }
+    let token: Option<std::sync::Arc<str>> = token.map(|t| std::sync::Arc::from(t.as_str()));
     loop {
         let (stream, _) = listener.accept()?;
         let svc = service.clone();
+        let tok = token.clone();
         thread::spawn(move || {
-            let _ = handle_connection(stream, svc);
+            let _ = handle_connection(stream, svc, tok);
         });
     }
 }
 
-fn handle_connection(stream: TcpStream, service: WriterService) -> io::Result<()> {
+/// Constant-time equality, so the token check does not leak a prefix through timing.
+fn ct_eq(a: &str, b: &str) -> bool {
+    if a.len() != b.len() {
+        return false;
+    }
+    a.bytes()
+        .zip(b.bytes())
+        .fold(0u8, |acc, (x, y)| acc | (x ^ y))
+        == 0
+}
+
+fn handle_connection(
+    stream: TcpStream,
+    service: WriterService,
+    token: Option<std::sync::Arc<str>>,
+) -> io::Result<()> {
     let mut writer = stream.try_clone()?;
-    let reader = BufReader::new(stream);
+    let mut reader = BufReader::new(stream);
+    if let Some(expected) = token {
+        let mut first = String::new();
+        reader.read_line(&mut first)?;
+        let presented = first.trim_end().strip_prefix("AUTH ").unwrap_or("");
+        if !ct_eq(presented, &expected) {
+            writeln!(writer, "E unauthorized")?;
+            return Ok(());
+        }
+        writeln!(writer, "OK")?;
+    }
     for line in reader.lines() {
         let line = line?;
         let reply = match parse_request(&line) {
@@ -202,6 +243,21 @@ impl TcpClient {
             writer: stream,
             reader,
         })
+    }
+
+    /// Connect and authenticate with the shared token. Fails if the server rejects it.
+    pub fn connect_with_token<A: ToSocketAddrs>(
+        addr: A,
+        token: &str,
+    ) -> Result<Self, ServiceError> {
+        let mut client = Self::connect(addr)?;
+        writeln!(client.writer, "AUTH {token}")?;
+        let mut line = String::new();
+        client.reader.read_line(&mut line)?;
+        match line.trim_end() {
+            "OK" => Ok(client),
+            _ => Err(ServiceError::Protocol("authentication rejected".into())),
+        }
     }
 
     /// Submit a transfer and read the reply line.
@@ -277,7 +333,7 @@ mod tests {
         let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
         let addr = listener.local_addr().unwrap();
         thread::spawn(move || {
-            let _ = serve_tcp(listener, svc);
+            let _ = serve_tcp(listener, svc, None);
         });
 
         let mut client = TcpClient::connect(addr).unwrap();
@@ -296,5 +352,43 @@ mod tests {
             client.submit(1, 2, 100).unwrap(),
             Reply::Committed { fee: 0 }
         );
+    }
+
+    #[test]
+    fn non_loopback_without_token_is_refused() {
+        let ledger = Ledger::new(&[(1, 10)], 0);
+        let (svc, _h) = WriterService::spawn(ledger);
+        let listener = TcpListener::bind((Ipv4Addr::UNSPECIFIED, 0)).unwrap();
+        let err = serve_tcp(listener, svc, None).unwrap_err();
+        assert_eq!(err.kind(), io::ErrorKind::InvalidInput);
+    }
+
+    #[test]
+    fn token_gates_every_connection() {
+        let ledger = Ledger::new(&[(1, 1_000), (2, 0)], 0);
+        let (svc, _h) = WriterService::spawn(ledger);
+        let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).unwrap();
+        let addr = listener.local_addr().unwrap();
+        thread::spawn(move || {
+            let _ = serve_tcp(listener, svc, Some("s3cret".to_string()));
+        });
+
+        assert!(TcpClient::connect_with_token(addr, "wrong").is_err());
+        // A connection that sends a request without authenticating gets no service.
+        let mut raw = TcpStream::connect(addr).unwrap();
+        writeln!(raw, "T 1 2 5").unwrap();
+        let mut line = String::new();
+        BufReader::new(raw).read_line(&mut line).unwrap();
+        assert_eq!(line.trim_end(), "E unauthorized");
+
+        let mut ok = TcpClient::connect_with_token(addr, "s3cret").unwrap();
+        assert_eq!(ok.submit(1, 2, 400).unwrap(), Reply::Committed { fee: 0 });
+    }
+
+    #[test]
+    fn constant_time_compare_matches_plain_equality() {
+        assert!(ct_eq("abc", "abc"));
+        assert!(!ct_eq("abc", "abd"));
+        assert!(!ct_eq("abc", "abcd"));
     }
 }

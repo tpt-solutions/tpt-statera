@@ -6,7 +6,8 @@
 //! Then, from other processes: `cargo run -p tpt-statera-runtime --example ledger_client -- 127.0.0.1:7878`
 //!
 //! The server starts with accounts 1 (funded with 1 000 000), 2 and 3, and a 15 bps fee.
-//! The protocol has no authentication. Do not bind to a public address.
+//! Authentication: set TPT_LEDGER_TOKEN on the server and on each client. Without a token the server
+//! only accepts loopback addresses.
 
 use std::net::TcpListener;
 
@@ -21,5 +22,7 @@ fn main() -> std::io::Result<()> {
     println!("ledger_server listening on {}", listener.local_addr()?);
     let ledger = Ledger::new(&[(1, 1_000_000), (2, 0), (3, 0)], 15);
     let (svc, _writer) = WriterService::spawn(ledger);
-    serve_tcp(listener, svc)
+    // The token is read from TPT_LEDGER_TOKEN. Without it the server refuses non-loopback addresses.
+    let token = std::env::var("TPT_LEDGER_TOKEN").ok();
+    serve_tcp(listener, svc, token)
 }
