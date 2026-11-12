@@ -16,7 +16,7 @@ Rounding policy with mandatory dust destinations and fee computation for `tpt-st
   so the protocol never overcharges.
 - **`Ceiling`** and **`HalfEven`** exist in the enum, but `RoundingPolicy::new` rejects them with
   `PolicyError::ModeNotPermitted`. Both can overcharge the user by a sub-unit amount. Permitting
-  them needs a sub-unit refund accumulator, which is not designed yet. See `docs/ARCHITECTURE.md` AD-4.
+  them needs a sub-unit refund accumulator, which is not designed yet. See `docs/ARCHITECTURE.md` AD-4..
 
 ## Testing
 
