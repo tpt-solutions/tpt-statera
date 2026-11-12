@@ -1,0 +1,81 @@
+// NEGATIVE CONTROL (todo 1F.02, nightly): this file must FAIL to verify. If it passes, the solver is unsound.
+// SPDX-License-Identifier: MIT OR Apache-2.0
+// Copyright (c) 2026 TPT Solutions
+//
+// tpt-statera — full validate_transfer, all clauses, exact product (todo 1C.01, 1D.01, 1D.02, 1D.03).
+//
+// Requires `telos verify --solver z3`, and the fixed disjunction lowering (each DNF branch is a
+// conjunction; the group holds if one branch holds). Earlier models dropped the disjunctive clauses
+// because of that lowering defect (docs/ARCHITECTURE.md AD-6).
+//
+// The Floor fee is the defining relation of floor(amount*bps/10000), and the product is exact:
+//     fee*10000 <= amount*bps < fee*10000 + 10000
+//
+// PROVED on every path (Z3):
+//   E1 strict conservation
+//   E2 no overdraft
+//   E3 directionality
+//   E4 Deny is a no-op                                  (status == 0 implies balances unchanged)
+//   E5 bounded rounding, both halves (1D.01):            0 <= amount*bps - credited*10000 < 10000
+//   E6 overflow denial (1D.03): recipient+amount > cap or treasury+fee > cap implies Deny
+//   E7 restated conservative denial (1D.02, AD-5): ideal Deny implies realized Deny, or the
+//      ideal shortfall is below one unit
+//
+// Verified: `telos verify --solver z3 proofs/transfer_validator_full.telos`
+
+@boundary(cpu_bound)
+@state(persistent)
+module TransferValidatorFull {
+    invariant Account {
+        balance >= 0
+    }
+
+    func validate(mut sender: Account, mut recipient: Account, mut treasury: Account,
+                  mut status: Account, amount: Int, bps: Int, fee: Int, cap: Int)
+        requires amount >= 0
+        requires bps >= 0
+        requires bps <= 10000
+        requires fee >= 0
+        requires cap >= 0
+        requires fee * 10000 <= amount * bps
+        requires amount * bps < fee * 10000 + 10000
+        requires sender.balance >= 0
+        requires recipient.balance >= 0
+        requires treasury.balance >= 0
+        requires status.balance == 0
+        // E1 strict conservation
+        ensures sender.balance + recipient.balance + treasury.balance
+                == old(sender.balance) + old(recipient.balance) + old(treasury.balance)
+        // E2 no overdraft
+        ensures sender.balance >= 0
+        // E3 directionality
+        ensures sender.balance <= old(sender.balance)
+        ensures recipient.balance >= old(recipient.balance)
+        ensures treasury.balance >= old(treasury.balance)
+        // E4 Deny is a no-op
+        ensures status.balance != 0 || sender.balance == old(sender.balance)
+        ensures status.balance != 0 || recipient.balance == old(recipient.balance)
+        ensures status.balance != 0 || treasury.balance == old(treasury.balance)
+        // E5 bounded rounding, both halves
+        ensures (treasury.balance - old(treasury.balance)) * 10000 <= amount * bps
+        ensures status.balance == 0 || amount * bps < (treasury.balance - old(treasury.balance)) * 10000 + 10000
+        // E6 overflow denial
+        ensures old(recipient.balance) + amount <= cap && old(treasury.balance) + fee <= cap || status.balance == 0
+        // E7 restated conservative denial (decision AD-5)
+        ensures old(sender.balance) * 10000 >= amount * 10000 + amount * bps || status.balance == 0
+                || amount * 10000 + amount * bps - old(sender.balance) * 10000 < 10000
+    {
+        if sender.balance >= amount + fee {
+            if recipient.balance + amount <= cap {
+                if treasury.balance + fee >= 0 {
+                    mutate state {
+                        sender.balance = old(sender.balance) - amount - fee;
+                        recipient.balance = old(recipient.balance) + amount;
+                        treasury.balance = old(treasury.balance) + fee;
+                        status.balance = 1;
+                    }
+                }
+            }
+        }
+    }
+}

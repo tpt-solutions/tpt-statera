@@ -17,10 +17,11 @@ are used.
 | Tool | Pinned version | Used by | Pin mechanism |
 | :--- | :--- | :--- | :--- |
 | `tpt-telos` (`telos` CLI) | `0.2.0` (workspace version in sibling checkout) | `proofs/*.telos`, `scripts/generate_certificate.py` | Version recorded in `proofs/README.md`; the solver transcript records the version in use |
-| `tpt-telos` built-in Fourier–Motzkin solver | as above | all proofs | Z3 is **not** used; see `docs/ARCHITECTURE.md` AD-6 |
+| `tpt-telos` Z3 backend (`--solver z3`, build with `--features z3`) | as above | all proofs, and the certificate | Required for the nonlinear proofs (products). Fourier–Motzkin refuses them; see `docs/ARCHITECTURE.md` AD-6 |
 
 The CLI surface relied on is exactly:
 
+- `telos verify --solver <z3|fourier-motzkin> <file>`: the exit code is the verdict (0 = all claims hold).
 - `telos verify <file> --json`: the output schema consumed by `scripts/generate_certificate.py`
   (`passed`, `functions[].checks[].{description, passed, location.line}`).
 

@@ -11,8 +11,14 @@
 name: nightly
 
 on:
+  # The proof job also runs on every push and PR to master (todo 1D.03 AC: proofs pass in CI on every
+  # push). The file keeps the name "nightly" for history; the benchmark job below is still disabled.
   schedule:
     - cron: "0 3 * * *"
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
   workflow_dispatch:
 
 jobs:
@@ -27,7 +33,10 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
+          # todo 1A.07a: pinned to the tested commit, not the default branch, so a telos change
+          # cannot silently change the proof results. Bump deliberately, with the proofs re-run.
           repository: tpt-solutions/tpt-telos
+          ref: bfa9637ac8682cd3dae94aa9d59387daaf1a3e0c
           path: tpt-telos
 
       - uses: dtolnay/rust-toolchain@stable
@@ -53,18 +62,12 @@ jobs:
           LD_LIBRARY_PATH: ${{ env.Z3_DIR }}
         run: cargo build --release -p tpt-telos --features z3
 
-      - name: Verify every proof under Z3 (fail on any FAIL)
+      - name: Verify every proof under Z3, and every negative control must fail
         working-directory: tpt-statera
         env:
           LD_LIBRARY_PATH: ${{ env.Z3_DIR }}
-        run: |
-          set -e
-          TELOS=../tpt-telos/target/release/telos
-          for f in proofs/transfer_validator_full.telos proofs/floor_fee_exact.telos \
-                   proofs/vesting_exact.telos proofs/composition_two_transfers.telos \
-                   proofs/netting_10party.telos; do
-            "$TELOS" verify --solver z3 "$f" | tee /dev/stderr | (! grep -q "\[FAIL\]")
-          done
+        # Exit codes decide: each proof must exit 0, each proofs/negative control must refute a claim.
+        run: python3 scripts/verify_proofs.py --telos ../tpt-telos/target/release/telos --solver z3
 
       - name: Regenerate the certificate and require no drift
         working-directory: tpt-statera
