@@ -1,0 +1,19 @@
+# A valid fee policy: 1% under 1 000 units, 0.5% from 1 000 up. Treasury keeps 60%, account 7 gets 40%.
+[rounding]
+mode = "floor"
+dust = "sender_retains"
+
+[[tiers]]
+min_amount = 0
+fee_rate_bps = 100
+
+[[tiers]]
+min_amount = 1000
+fee_rate_bps = 50
+
+[split]
+treasury_bps = 6000
+
+[[split.others]]
+account = 7
+bps = 4000

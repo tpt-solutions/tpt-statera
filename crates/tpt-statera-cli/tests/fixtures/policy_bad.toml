@@ -1,0 +1,16 @@
+# Three problems, one in each section: a forbidden rounding mode, a first tier that does not start at 0,
+# and shares that do not sum to 10 000.
+[rounding]
+mode = "ceiling"
+dust = "treasury"
+
+[[tiers]]
+min_amount = 5
+fee_rate_bps = 100
+
+[split]
+treasury_bps = 5000
+
+[[split.others]]
+account = 7
+bps = 4000

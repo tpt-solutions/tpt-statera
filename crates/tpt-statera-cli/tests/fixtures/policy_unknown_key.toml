@@ -1,0 +1,11 @@
+[rounding]
+mode = "floor"
+dust = "burn"
+rate_limit = 10
+
+[[tiers]]
+min_amount = 0
+fee_rate_bps = 100
+
+[split]
+treasury_bps = 10000

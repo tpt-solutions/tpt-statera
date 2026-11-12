@@ -1,0 +1,36 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Copyright (c) 2026 TPT Solutions
+
+[package]
+name = "tpt-statera-cli"
+description = "The `statera` command: validate transfers, check fee policies, verify proof certificates (todo 5C)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+homepage.workspace = true
+readme = "README.md"
+keywords = ["ledger", "cli", "fees", "policy", "finance"]
+categories = ["command-line-utilities", "finance"]
+publish = false
+
+[[bin]]
+name = "statera"
+path = "src/main.rs"
+
+[dependencies]
+tpt-statera-core = { path = "../tpt-statera-core", features = ["serde"] }
+tpt-statera-policy = { path = "../tpt-statera-policy", features = ["serde"] }
+tpt-statera-proof = { path = "../tpt-statera-proof" }
+clap = { version = "4", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"
+
+[lints]
+workspace = true
